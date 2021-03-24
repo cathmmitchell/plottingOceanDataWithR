@@ -1,0 +1,416 @@
+---
+title: "Plotting Ocean Data With R"
+output: html_notebook
+---
+
+# 0. Notes
+
+- **This notebook needs to be carpentry-ified.**
+- Using slimmed down CTD data from years 2016 - 2018. Might change later
+- Currently kept dates in the YYYYMMDD format, but also included year, month and day columns
+- Useful to have axes labeling and limit setting in the ggplot calls?
+- eqn of line? y = mx + b? y = ax + b? y = mx + c?
+
+
+# 1. Getting setup
+
+## Initialize session
+
+Let's start by setting our working directory by either:
+
+1. Running the following code at the Console:
+```{r}
+setwd('X:/cmitchell/teaching-mentoring/01-BigelowTeaching/carpentriesWorkshops/April2021-RIntro/')
+```
+
+2. Navigating to the correct directory in the "Files" window in the bottom right of RStudio, then hitting "More > Set As Working Directory"
+
+3. Selecting the `Session` menu at the top of RStudio, then `Select Working Directory > Choose Directory`, and navigate to the appropriate directory
+
+And we'll load the `tidyverse` library:
+
+```{r}
+library(tidyverse)
+```
+
+## Importing the data
+
+We're going to use some water column data from the Damariscotta River. The data spans XX years and is at four locations along the river. 
+
+[how much of a description of what the data are do you think we need]
+
+The data file is located at XXXXX (on Google Drive?). If you haven't already, please download the file and put save it in your working directory.
+
+Let's read the data into a data frame:
+
+```{r}
+fieldData <- read_csv('DamariscottaRiverData.csv')
+```
+
+What does this data look like?
+
+```{r}
+head(fieldData)
+```
+
+
+# 2. Scatter plots and linear regressions
+
+Yesterday we learned how to make scatter plots to visualize relationships between data. But often we need to quantify those relationships. We're going to revisit scatter plots today, but with a focus on linear regressions and including regression lines on scatter plots.
+
+## 2.1 Scatter plots
+
+Let's look at how chlorophyll fluorescence is related to temperature.
+
+```{r, fig.height = 5, fig.width=5}
+ggplot(data = fieldData, mapping = aes(x = temperature_degC, y = fluorescence_mg_m3)) + 
+  geom_point() +
+  xlab('Temperature (deg C)') +
+  ylab('Fluorescence (mg/m^3)') +
+  xlim(7,18) + ylim(0,12)
+```
+
+In the above figure, we have a lot of fluorescence data below 2.5 mg m$^{-3}$ - in fact, the majority of our data are below that value. In this case (and as often happens with geophysical data), it is more useful to plot (& perform statistics on) the log-transformed data, so we can better understand the relationship between the parameters.
+
+Let's plot the relationship between temperature and log-transformed fluorescence:
+
+```{r, fig.height = 5, fig.width=5}
+ggplot(data = fieldData, mapping = aes(x = temperature_degC, y = fluorescence_mg_m3)) + 
+  geom_point() +
+  xlab('Temperature (deg C)') +
+  ylab('Fluorescence (mg/m^3)') +
+  xlim(7,18) +  scale_y_log10(limits=c(0.07,12)) 
+```
+
+OK great - so we can visualize the relationship between fluorescence and temperature. But how do we include a linear regression?
+
+## 2.2 Linear regressions
+
+To do a linear regression, we need to fit a linear model to our data. 
+
+**Note: we are not going into the statistics here, or details of whether it's appropriate to do a linear regression on these data - we are just showing you *how* you would do a linear regression with your own data if you so wished.**
+
+Let's start with looking at fluorescence and temperature. To visualize the linear model, we can add in `geom_smooth(model=lm)` to our plot:
+
+```{r, fig.height = 5, fig.width=5}
+ggplot(data = fieldData, mapping = aes(x = temperature_degC, y = fluorescence_mg_m3)) + 
+  geom_point() +
+  geom_smooth(method='lm') +
+  xlab('Temperature (deg C)') +
+  ylab('Fluorescence (mg/m^3)') +
+  xlim(7,18) + ylim(0,12)
+```
+
+But how do we get the equation and goodness of fit statistics?
+
+```{r, fig.height = 5, fig.width=5}
+# fitting a linear model between the two variables
+model1 <- lm(fieldData$fluorescence_mg_m3 ~ fieldData$temperature_degC)
+
+#display results of linear model
+summary(model1)
+```
+
+How do we access these different values and assign them to objects?
+
+```{r}
+# assigning the slope and intercept fromt the model to variables
+intercept <- model1$coefficients[1]
+slope <- model1$coefficients[2]
+
+sum_model1 <- summary(model1)
+
+rsquare <- sum_model1$r.squared
+adjrsquare <- sum_model1$adj.r.squared
+std_error <- sum_model1$sigma
+```
+
+Once we have our linear model (i.e. the equation of our line), there are other ways to add the line to the figure: `geom_abline` and `stat_function`. Let's look at `stat_function`. To use `stat_function`, we need to provide it with a function that describes the equation of our model. In this example, we used a linear model to find a straight line, so we need to give `stat_function` a function that describes the equation of a line (`y = mx + b`):
+
+```{r, fig.height = 5, fig.width=5}
+ggplot(data = fieldData, mapping = aes(x = temperature_degC, y = fluorescence_mg_m3)) + 
+  geom_point() +
+  stat_function(fun = function(x) intercept + slope * x, size = 2, color = 'cyan') +
+  xlab('Temperature (deg C)') +
+  ylab('Fluorescence (mg/m^3)') +
+  xlim(7,18) + ylim(0,12)
+```
+
+Why is this useful? Why don't we just always use `geom_smooth`? One of the benefits of `stat_function` is that we can use it to plot *any* kind of line - it doesn't need to be a straight line. For example, say we wanted to fit a 2nd order polynomial (a quadratic) to our data we could do the following:
+
+```{r, fig.height = 5, fig.width=6}
+# fitting a linear model between the two variables
+model2 <- lm(fieldData$fluorescence_mg_m3 ~ fieldData$temperature_degC + I(fieldData$temperature_degC^2))
+
+# assigning the coefficients from the models to the variables
+p2 <- model2$coefficients[3]
+p1 <- model2$coefficients[2]
+p0 <- model2$coefficients[1]
+
+ggplot(data = fieldData, mapping = aes(x = temperature_degC, y = fluorescence_mg_m3)) + 
+  geom_point() +
+  stat_function(fun = function(x) intercept + slope * x, size = 2, aes(color='1st order')) +
+  stat_function(fun = function(x) p0 + p1 * x + p2 * (x^2), size = 2, aes(color='2nd order')) +
+  xlab('Temperature (deg C)') +
+  ylab('Fluorescence (mg/m^3)') +
+  xlim(7,18) + ylim(0,12)
+```
+
+Or something even more complicated, such as a model between the temperature and log-transformed fluorescence:
+
+```{r, fig.height = 5, fig.width=6}
+modelLog <- lm(log10(fieldData$fluorescence_mg_m3) ~ fieldData$temperature_degC)
+interceptLog <- modelLog$coefficients[1]
+slopeLog <- modelLog$coefficients[2]
+
+ggplot(data = fieldData, mapping = aes(x = temperature_degC, y = fluorescence_mg_m3)) + 
+  geom_point() +
+  stat_function(fun = function(x) intercept + slope * x, size = 2, aes(color='1st order')) +
+  stat_function(fun = function(x) p0 + p1 * x + p2 * (x^2), size = 2, aes(color='2nd order')) +
+  stat_function(fun = function(x) 10**interceptLog * (10**(slopeLog * x)), size = 2, aes(color = 'power')) +
+  xlab('Temperature (deg C)') +
+  ylab('Fluorescence (mg/m^3)') +
+  xlim(7,18) + ylim(0,12)
+```
+
+[write something in here about applicability of this type of analysis on these data]
+
+# 3. Visualizing 2D patterns on regular grids (need better title)
+
+Here, we are thinking about visualizing one variable based on two other variables. For example, how does surface chlorophyll fluorescence change at each station over the course of a sampling season? Or OTHER EXAMPLES?
+
+For our data set, let's consider surface chlorophyll fluorescence at each station over the 2016 sampling season. We are going to create a couple of different figures that show surface chlorophyll fluorescence with date along the x-axis and station along the y-axis. Before creating the figures, we need to do some data manipulation to wrangle our data into a new data frame that contains 3 columns: date, station and surface chlorophyll fluorescence.
+
+## 3.1 Data Manipulation
+
+### Dates
+
+Our data frame contains data from 2016 - 2018, so we first need to `filter` the data frame (select rows based on a specific criterion):
+
+```{r}
+data2016 <- filter(fieldData, year == 2016)
+
+#check our results
+summary(data2016)
+```
+
+One of the variables we want to plot is date. We currently have date stored as a number in the format yyyymmdd, and in separate year, month and day columns. If we used the yyyymmdd data for plotting date, our dates would be spaced out incorrectly because R recognises this as a number. Let's look the dates we have samples from:
+```{r}
+unique(data2016$date)
+```
+The second date is September 20th and the third is October 4th - a gap of 14 days. But R sees that as a gap of 84 (20161004-20160920), hence the spacing along the given axis would be incorrect. 
+
+What we need to do is format our dates in a way R recognises them as dates. Let's use the `ymd` function from yesterday to convert the dates, and the `mutate` function to add the reformatted dates to our data frame.
+
+```{r include=FALSE}
+library(lubridate)
+
+mutate(data2016, rdate = ymd(data2016$date))
+```
+
+### Surface data
+
+We have data that spans from the surface to a maximum depth of 105 m, but we only want the surface data. These data are measured from a profiling instrument - so the depths are slightly different for every station and we can't filter our new `data2016` data frame based on one depth value. There are a few different ways to deal with this, and the exact choices you make will depend on your data and your situation. Here, we are going to say surface chlorophyll fluorescence is the average value over the top 2 m. What that means is for every cruise and station, we need to calculate the average chlorophyll fluorescence in the top 2 m.
+
+Let's think about the steps we need to take to manipulate our data into that format: 
+
+1. Select the rows where the depth is less than 2 m (use `filter`)
+2. Separate the data into date and station groups (use `group_by`)
+3. Take the average for each group of data (use `summarize`)
+
+And we are going to use the pipes to connect this all together.
+
+
+```{r}
+chldata2016 <- data2016 %>% filter(depth_m < 2) %>% group_by(station,rdate) %>% summarize(surf_chl = mean(fluorescence_mg_m3))
+
+head(chldata2016)
+```
+
+We've manipulated our data into the form we need to now plot it. There are multiple ways to visualize this data, and again, what you do will depend on your situation. We're going to look at a couple of different ways.
+
+## 3.2 Visualizing data using a contour plot
+
+```{r, fig.height = 5, fig.width=8}
+ggplot(chldata2016,aes(x=rdate,y=station)) +
+  geom_contour_filled(aes(z=surf_chl)) +
+  geom_point() +
+  labs(fill='surface chlorophyll fluorescence (mg m^-3)') +
+  theme(panel.background = element_rect(fill = "white", colour = "white"))
+```
+
+#### Aside #1: Date Formatting 
+
+You can format the date in different ways by including a `scale_x_date(date_labels='fmt')` argument in your `ggplot` function, where `'fmt'` is your required date format. Here's a handy table showing different date formats (from [here](https://www.statmethods.net/input/dates.html)):
+
+<img src='datetime_formats.png' width="70%">
+
+So to format your dates as e.g. October-01, you'd use `scale_x_date(date_labels='%B-%d')`.
+
+#### Aside #2: Repositioning x-ticks and x-tick labels
+
+WANT TO INCLUDE THIS??
+
+## 3.3 Visualizing data using a XXXXX??
+
+
+# 4. Interpolating and visualizing data
+
+The approach in previous section works well when your data are consistent in terms of the variables you want to compare. For the data we plotted above, there were five different cruises, and on each cruise, data was collected at the same four locations. We had data for every cruise and station. If we'd been missing data at one of the stations on one of the cruises, we'd just have a blank part on the plots we made. But what if we were missing a lot of data - would the above approach still be a good way to visualize our data?
+
+To dig into this a bit further, let's consider how chlorophyll fluorescence varies by depth at each station *for one cruise*.
+
+We need to do a bit of data manipulation again to create a data frame we'll use for plotting. In this case, we're going to have station on the x-axis and depth on the y-axis, and we'll consider the cruise that took place on September 8th 2016.
+
+```{r}
+cruiseData <- filter(fieldData, date==20160908)
+```
+
+We now have a data frame that includes columns for depth, station and chlorophyll fluorescence for just one cruise - so let's use the same approach as before to create a contour plot:
+
+```{r, fig.height = 5, fig.width=8}
+ggplot(cruiseData,aes(x=station,y=depth_m)) +
+  geom_contour_filled(aes(z=fluorescence_mg_m3)) +
+  geom_point() +
+  labs(fill='surface chlorophyll fluorescence (mg m^-3)') +
+  scale_y_reverse() +
+  theme(panel.background = element_rect(fill = "white", colour = "white"))
+```
+
+We end up with no contours! What's going on here? To draw the contours, R needs the y values need to all be at the same intervals (similarly for the x values). For our data, the depths at each station are irregular and different from each other:
+
+
+```{r, fig.height = 4, fig.width=5}
+ggplot(cruiseData, aes(x=fluorescence_mg_m3, y=depth_m, color = factor(station))) +
+  geom_point() +
+  labs(color='Station') +
+  ylim(5,1) + xlim(3,9)
+```
+
+[example of a different type of data you might want to do this on??]
+
+So we need to sort the depth data onto a regular grid - to do this we will need to group the data into depth bins (or depth ranges) and then calculate the mean for each depth bin. Let's bin our data into 1 m intervals. Again, we're making a decision here based on our particular data set and situation, this could be different for you.
+
+We are going to use a very similar process to earlier (when we considered surface chlorophyll fluorescence on all cruises in 2016).
+
+1. Round the depths to the nearest meter and include as column in the data frame (use `mutate`)
+2. Separate the data into depth bin and station groups (use `group_by`)
+3. Take the average for each group of data (use `summarize`)
+
+```{r}
+binned <- cruiseData %>% mutate(depthBin = round(cruiseData$depth_m)) %>% group_by(station,depthBin) %>% summarize(av_fluor = mean(fluorescence_mg_m3))
+
+head(binned)
+```
+
+We've now got a data frame like we had before - let's try `geom_contour_filled` again:
+
+```{r, fig.height = 5, fig.width=8}
+ggplot(binned,aes(x=station,y=depthBin)) +
+  geom_contour_filled(aes(z=av_fluor)) +
+  geom_point() +
+  labs(fill='surface chlorophyll fluorescence (mg m^-3)') +
+  scale_y_reverse()
+```
+
+This looks better, but what this plotting function doesn't do is interpolate data between missing data points. We know we have data at station 4 below 50 m that isn't represented in this plot. Can we use a different function to show those data too?
+
+```{r, fig.height = 5, fig.width=8}
+ggplot(binned,aes(x=station,y=depthBin)) +
+  geom_tile(aes(fill=av_fluor)) +
+  scale_fill_continuous() +
+  labs(fill='surface chlorophyll fluorescence (mg m^-3)') +
+  scale_y_reverse()
+```
+
+All the data are visualized when we plot the data this way. However, in this case (and all previous examples!), our x-axis is station number i.e. it is a given location. We might want to space out the data on the x-axis based on those locations, rather than station number, so we can visualize our data with a representative separation between the data points. For this data set, the stations are on a similar longitude, so looking at latitude will give a good representation of the separation between the stations. But this could be distance along cruise track or field transect, or XXXX
+
+THIS NEXT BIT OF CODE IS INCLUDED HERE FOR NOW - MEANING TO INCLUDE LATITUDES IN ORIGINAL DF (unless we think it's worth including a complicated if else)
+
+```{r}
+#binned %>% mutate(latitude = ifelse(binned$station == 1, 43.903,ifelse(binned$station == 2, 43.863,ifelse(binned$station == 3, 43.811,ifelse(binned$station == 4,43.753,NaN)))))
+
+
+binned <- cruiseData %>% mutate(depthBin = round(cruiseData$depth_m), latitude = ifelse(cruiseData$station == 1, 43.903,ifelse(cruiseData$station == 2, 43.863,ifelse(cruiseData$station == 3, 43.811,ifelse(cruiseData$station == 4,43.753,NaN))))) %>% group_by(latitude,depthBin) %>% summarize(av_fluor = mean(fluorescence_mg_m3))
+
+head(binned)
+```
+
+```{r, fig.height = 5, fig.width=8}
+ggplot(binned,aes(x=latitude,y=depthBin)) +
+  geom_tile(aes(fill=av_fluor)) +
+  scale_fill_continuous() +
+  labs(fill='surface chlorophyll fluorescence (mg m^-3)') +
+  scale_y_reverse() +
+  scale_x_reverse() #flipping the x-axis too, so station 1 is on the left
+```
+
+What we end up with is this plot where we have gaps between each station measurement because our sampling stations are not equally spaced in terms of latitude. What we can do is estimate what the chlorophyll fluorescence would be in between where we have our samples i.e. we can interpolate our data.
+
+We are going to do the bilinear interpolation on our data, which means we are going to estimate chlorophyll fluorescence values over regularly spaced latitude and depth values. We're going to use a handy function from the `akim` package to do all the hard work for us:
+
+[appropriate place to include the install package?]
+
+```{r}
+library(akima)
+
+#interpolate our data:
+interpReference <- interp(binned$latitude, binned$depthBin, binned$av_fluor)
+```
+
+What does `interpReference` look like? It is a list with 3 items: 
+
+ 1. `x`, which is a list of 40, regularly spaced latitudes
+ 2. `y`, which is a list of 40, regularly spaced depths
+ 3. `z`, which is a 40 x 40 grid (or **matrix**), where each **element** (number in the grid) corresponds to one of the depth (columns) and latitude (rows) values. For example, 
+    a. the `z` value in the first row and first column corresponds to the first latitude and depth values
+    b. the `z` value in the first row and second column corresponds to the first latitude, and second depth value
+    c. the `z` value in the second row and first column corresponds to the second latitude, and first depth value
+
+What we now need to do is get our data into a data frame format for `ggplot`. One way to do this is turn the latitude and depth values into a 40 x 40 grid too, and then reshape the data into a data frame. 
+
+
+```{r message=FALSE, warning=FALSE}
+# making the grids of latitude and depth
+# Note - we need to "transpose" the matrix for the depth data,
+# i.e. we need to flip the rows and columns around
+lat <- matrix(interpReference$x,ncol=40,nrow=40)
+depth <- t(matrix(interpReference$y,ncol=40,nrow=40))
+
+# we need to "flatten" our grids into lists (the as.vector command)
+fluor <- as.vector(interpReference$z)
+lats <- as.vector(lat)
+depths <- as.vector(depth)
+
+# finally, putting the lists together as a dataframe
+CruiseDataInterp <- data.frame(fluorescence = fluor, latitude = lats, depth = depths)
+```
+
+```{r}
+ggplot(CruiseDataInterp, aes(x=latitude, y=depth)) +
+  geom_tile(aes(fill = fluorescence)) +
+  scale_y_reverse() +
+  scale_x_reverse() + #so station1 is on the left and station4 is on the right
+  labs(y="Depth (m)", fill="fluorescence (mg m^-3)") +
+  scale_fill_distiller(palette="Greens",direction=1)
+```
+We can include the sample locations and contour lines to make it clear where the interpolation is happening:
+
+```{r}
+ggplot(CruiseDataInterp, aes(x=latitude, y=depth)) +
+  geom_tile(aes(fill = fluorescence)) +
+  geom_contour(aes(z = fluorescence),color="white") +
+  geom_point(data = binned, aes(x=latitude, y=depthBin),color="black") + #adding in the measurement locations
+  scale_y_reverse() +
+  scale_x_reverse() + #so station1 is on the left and station4 is on the right
+  labs(y="Depth (m)", fill="fluorescence (mg m^-3)") +
+  scale_fill_distiller(palette="Greens",direction=1)
+```
+
+Note: interpolation below measured depths - in this case (the Damariscotta River) those interpolations don't make sense because the profiles are full water column i.e. depth was limited by bathymetery. Point this out and include code to mask those points?
+
+# FINAL PART TO INCLUDE: for loops and functions for creating multiple versions of figures
+
+[I also have a lab that does the above but for temporal interpolation e.g. depth vs cruise date for a given station - maybe include as an extra]
+
+
