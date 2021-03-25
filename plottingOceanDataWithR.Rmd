@@ -20,7 +20,7 @@ Let's start by setting our working directory by either:
 
 1. Running the following code at the Console:
 ```{r}
-setwd('X:/cmitchell/teaching-mentoring/01-BigelowTeaching/carpentriesWorkshops/April2021-RIntro/')
+setwd('X:/cmitchell/teaching-mentoring/01-BigelowTeaching/carpentriesWorkshops/April2021-RIntro/plottingOceanDataWithR/')
 ```
 
 2. Navigating to the correct directory in the "Files" window in the bottom right of RStudio, then hitting "More > Set As Working Directory"
@@ -205,12 +205,12 @@ What we need to do is format our dates in a way R recognises them as dates. Let'
 ```{r include=FALSE}
 library(lubridate)
 
-mutate(data2016, rdate = ymd(data2016$date))
+data2016new <- mutate(data2016, rdate = ymd(data2016$date))
 ```
 
 ### Surface data
 
-We have data that spans from the surface to a maximum depth of 105 m, but we only want the surface data. These data are measured from a profiling instrument - so the depths are slightly different for every station and we can't filter our new `data2016` data frame based on one depth value. There are a few different ways to deal with this, and the exact choices you make will depend on your data and your situation. Here, we are going to say surface chlorophyll fluorescence is the average value over the top 2 m. What that means is for every cruise and station, we need to calculate the average chlorophyll fluorescence in the top 2 m.
+We have data that spans from the surface to a maximum depth of 105 m, but we only want the surface data. These data are measured from a profiling instrument - so the depths are slightly different for every station and we can't filter our new `data2016new` data frame based on one depth value. There are a few different ways to deal with this, and the exact choices you make will depend on your data and your situation. Here, we are going to say surface chlorophyll fluorescence is the average value over the top 2 m. What that means is for every cruise and station, we need to calculate the average chlorophyll fluorescence in the top 2 m.
 
 Let's think about the steps we need to take to manipulate our data into that format: 
 
@@ -222,12 +222,24 @@ And we are going to use the pipes to connect this all together.
 
 
 ```{r}
-chldata2016 <- data2016 %>% filter(depth_m < 2) %>% group_by(station,rdate) %>% summarize(surf_chl = mean(fluorescence_mg_m3))
+chldata2016 <- data2016new %>% filter(depth_m < 2) %>% group_by(station,rdate) %>% summarize(surf_chl = mean(fluorescence_mg_m3))
 
 head(chldata2016)
 ```
 
-We've manipulated our data into the form we need to now plot it. There are multiple ways to visualize this data, and again, what you do will depend on your situation. We're going to look at a couple of different ways.
+We've manipulated our data into the form we need to now plot it. *However* in the process, we made two extra data frames that we are not going to use anymore: `data2016` and `data2016new`. At each step of our manipulating, we needed to try and keep track of which data frame to use where. With only two it's maybe OK to keep on top of, but if there are a lot more steps, you can sometimes get lost in sea of data frames. Pipes can really help keep your environment free of unnecessary variables/objects.
+
+In our case, we could have actually used pipes to do all the manipulations in one command:
+
+```{r}
+chldata2016 <- fieldData %>% filter(year == 2016) %>% mutate(rdate = ymd(data2016$date)) %>% filter(depth_m < 2) %>% group_by(station,rdate) %>% summarize(surf_chl = mean(fluorescence_mg_m3))
+```
+
+In fact, the order of the first two commands doesn't matter, so to simplify this long command, we could switch the order of the first two commands, then combine the two calls to `filter` into one:
+
+```{r}
+chldata2016 <- fieldData %>% mutate(rdate = ymd(date)) %>% filter(year == 2016, depth_m < 2) %>% group_by(station,rdate) %>% summarize(surf_chl = mean(fluorescence_mg_m3))
+```
 
 ## 3.2 Visualizing data using a contour plot
 
@@ -298,7 +310,7 @@ We are going to use a very similar process to earlier (when we considered surfac
 3. Take the average for each group of data (use `summarize`)
 
 ```{r}
-binned <- cruiseData %>% mutate(depthBin = round(cruiseData$depth_m)) %>% group_by(station,depthBin) %>% summarize(av_fluor = mean(fluorescence_mg_m3))
+binned <- cruiseData %>% mutate(depthBin = round(depth_m)) %>% group_by(station,depthBin) %>% summarize(av_fluor = mean(fluorescence_mg_m3))
 
 head(binned)
 ```
@@ -331,7 +343,7 @@ THIS NEXT BIT OF CODE IS INCLUDED HERE FOR NOW - MEANING TO INCLUDE LATITUDES IN
 #binned %>% mutate(latitude = ifelse(binned$station == 1, 43.903,ifelse(binned$station == 2, 43.863,ifelse(binned$station == 3, 43.811,ifelse(binned$station == 4,43.753,NaN)))))
 
 
-binned <- cruiseData %>% mutate(depthBin = round(cruiseData$depth_m), latitude = ifelse(cruiseData$station == 1, 43.903,ifelse(cruiseData$station == 2, 43.863,ifelse(cruiseData$station == 3, 43.811,ifelse(cruiseData$station == 4,43.753,NaN))))) %>% group_by(latitude,depthBin) %>% summarize(av_fluor = mean(fluorescence_mg_m3))
+binned <- cruiseData %>% mutate(depthBin = round(cruiseData$depth_m)) %>% group_by(latitude,depthBin) %>% summarize(av_fluor = mean(fluorescence_mg_m3))
 
 head(binned)
 ```
@@ -409,8 +421,146 @@ ggplot(CruiseDataInterp, aes(x=latitude, y=depth)) +
 
 Note: interpolation below measured depths - in this case (the Damariscotta River) those interpolations don't make sense because the profiles are full water column i.e. depth was limited by bathymetery. Point this out and include code to mask those points?
 
-# FINAL PART TO INCLUDE: for loops and functions for creating multiple versions of figures
+# For loops and functions for creating multiple versions of figures
 
-[I also have a lab that does the above but for temporal interpolation e.g. depth vs cruise date for a given station - maybe include as an extra]
+## Writing Functions
+
+Functions are blocks of code which when called, perform a specific task. Usually you give them an input and they give you an output. We've used lots of different R functions e.g. `ggplot`, `image.plot`, etc. We can write our own functions for our own specific tasks. If you find yourself copying and pasting blocks of code and changing just a couple small parts, that's often a good time to think about writing a function (or a for loop - more later!)
+
+#### Example: write a function which adds two numbers
+
+```{r}
+addition <- function(a,b){
+  return(a+b)
+}
+```
+
+Let's try using our function:
+```{r}
+addition(9,3)
+```
+
+### Function for creating a figure
+
+The last figure we created was for one variable, for one cruise. What if we want to look at a different variable? Or a different cruise? It would be nice to have a function to regenerate a plot quickly.
+
+We're actually going to create two functions: one that deals with the data manipulation, and one that deals with the plotting. 
+
+#### Data manipulation function
+
+We need to think about what the inputs of our function are going to be - these are the variables or objects we want to change e.g. variable or cruise date. We also need to think about our output - this will be a data frame which we can use to create a plot. As a reminder, here's the steps we took earlier to do the data manipulation:
+
+1. Filtered the original data frame based on cruise date
+2. Binned the data into 1 m intervals
+3. Interpolated the relevant variable
+4. Reshaped the data back into a data frame
+
+Let's combine these together into a function. The following code will all be a copy from what we did earlier, with a couple of adjustments:
+
+1. A few of the object names have been generalized e.g. we'll use `dataframe` rather than `fieldData`, call the column we want to plot `variable` rather than "hard coding" its name "fluorescence_mg_m3" and the date `cruiseDate` (as well as renaming a couple of the intermediate objects created along the way)
+2. We're going to make use of the `.data` pronoun. The `.data` pronoun refers to data in your data frame. It's really useful when you want to specify a column name to one of the `dplyr` functions as a character object. See [!this](https://tinyheero.github.io/2020/03/01/use-data-env-pronouns-tidyverse.html) blog post that gives a good overview of `.data` (and `.env`) pronouns. [better way to do this? expand explanation with simpler example??]
+
+```{r}
+cruiseinterpolation <- function(dataframe, variable, cruiseDate){
+  # return a data frame with a variable interpolated based on depth and latitude
+  # for a given cruise data
+  
+  binned <- dataframe %>% filter(date == cruiseDate) %>% mutate(depthBin = round(depth_m)) %>% group_by(latitude,depthBin) %>% summarize(avg = mean(.data[[variable]]))
+  
+  #interpolate our data:
+ interpReference <- interp(binned$latitude, binned$depthBin, binned$avg)
+ 
+ #reshaping into a data frame
+ lat <- matrix(interpReference$x,ncol=40,nrow=40)
+ depth <- t(matrix(interpReference$y,ncol=40,nrow=40))
+ vardata <- as.vector(interpReference$z)
+ lats <- as.vector(lat)
+ depths <- as.vector(depth)
+
+ #putting the lists together as a data frame
+ newdf <- data.frame(avg = vardata, latitude = lats, depth = depths)
+ 
+ #outputting the new data frame
+ return(newdf)
+}
+```
+
+Next, let's write our plotting function:
+
+```{r}
+interpolationplot <- function(dataframe, variable, colorlabel){
+  # returns a heatmap style plot of a variable based on latitude and depth
+  
+  p<- ggplot(dataframe, aes(x=latitude, y=depth)) +
+  geom_tile(aes(fill = .data[[variable]])) +
+  geom_contour(aes(z = .data[[variable]]),color="white") +
+  #geom_point(data = binned, aes(x=latitude, y=depthBin),color="black") + #adding in the measurement locations
+  scale_y_reverse() +
+  scale_x_reverse() + #so station1 is on the left and station4 is on the right
+  labs(y="Depth (m)", fill=colorlabel) +
+  scale_fill_distiller(palette="Greens",direction=1)
+  
+  return(p)
+  
+}
+```
+**still need to include the locations of the data, date as title (and colorscale limits?)**
+
+
+Now we can try out our functions:
+
+```{r}
+plotData <- cruiseinterpolation(fieldData, 'fluorescence_mg_m3', 20171109)
+interpolationplot(plotData,'avg','fluorescence')
+```
+
+## For Loops
+
+
+### For loop example
+
+#### Example: print the statement "hello" four times
+
+```{r}
+for (ii in 1:4) {
+  print("hello")
+}
+```
+
+Can we also print which loop iteration we are on (e.g. the first, second, etc)?
+
+```{r}
+for (ii in 1:4) {
+  print(paste(ii,"hello"))
+}
+```
+
+Can we build a list over a for loop? For example, let's build a list that contains the iteration number multiplied by 10.
+
+```{r}
+mylst <- vector("list",length=4)
+for (ii in 1:4) {
+  mylst[[ii]] = ii*10
+}
+print(mylst)
+```
+
+We have our functions for manipulating and plotting the data - but what if we want to plot the chlorophyll fluorescence for every cruise in 2016? We could call our functions in a for loop.
+
+Let's think about what we want to loop over - we're saying on every iteration of our loop, we want to provide a different `cruiseDate` to our manipulation function. So we need to first put all our dates into a vector, then loop over them.
+
+```{r}
+alldates <- unique(data2016$date) ### REWRITE ONCE I'VE FIGURED OUT WHAT DATA WILL BE IN THE DATA FILE
+
+for (dd in alldates){
+  plotData <- cruiseinterpolation(fieldData, 'fluorescence_mg_m3', dd)
+  print(interpolationplot(plotData,'avg','fluorescence'))
+}
+
+```
+
+
+
+
 
 
