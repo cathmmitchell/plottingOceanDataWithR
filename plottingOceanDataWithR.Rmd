@@ -1,6 +1,8 @@
 ---
 title: "Plotting Ocean Data With R"
-output: html_notebook
+output: 
+  github_document: default
+  html_notebook: default
 ---
 
 # 0. Notes
@@ -20,7 +22,7 @@ Let's start by setting our working directory by either:
 
 1. Running the following code at the Console:
 ```{r}
-setwd('X:/cmitchell/teaching-mentoring/01-BigelowTeaching/carpentriesWorkshops/April2021-RIntro/plottingOceanDataWithR/')
+#setwd('X:/cmitchell/teaching-mentoring/01-BigelowTeaching/carpentriesWorkshops/April2021-RIntro/plottingOceanDataWithR/')
 ```
 
 2. Navigating to the correct directory in the "Files" window in the bottom right of RStudio, then hitting "More > Set As Working Directory"
