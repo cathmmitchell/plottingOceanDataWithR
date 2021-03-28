@@ -1,35 +1,27 @@
 Plotting Ocean Data With R
 ================
 
-# 0. Notes
+# Damariscotta River cruise data
 
--   **This notebook needs to be carpentry-ified.**
--   Using slimmed down CTD data from years 2016 - 2018. Might change
-    later
--   Currently kept dates in the YYYYMMDD format, but also included year,
-    month and day columns
--   Useful to have axes labeling and limit setting in the ggplot calls?
--   eqn of line? y = mx + b? y = ax + b? y = mx + c?
+For this tutorial we’re going to use some water column data from the
+Damariscotta River. The data spans XX years and is at four locations
+along the river.
 
-# 1. Getting setup
+The data file is called `DamariscottaRiverData.csv` and is [in the
+GitHub
+repository](https://github.com/cathmmitchell/plottingOceanDataWithR). If
+you haven’t already, please download the file and put save it in your
+working directory. You can download the file by:
+
+1.  Click on the file name
+2.  Either select `View raw` (center of screen) or the `Download` button
+    (to the right) - a new tab in your browser should open that shows
+    the contents of the file
+3.  Right click anywhere on the window with the file contents
+4.  Select `Save page as`
+5.  Save the file into your working directory.
 
 ## Initialize session
-
-Let’s start by setting our working directory by either:
-
-1.  Running the following code at the Console:
-
-``` r
-#setwd('X:/cmitchell/teaching-mentoring/01-BigelowTeaching/carpentriesWorkshops/April2021-RIntro/plottingOceanDataWithR/')
-```
-
-2.  Navigating to the correct directory in the “Files” window in the
-    bottom right of RStudio, then hitting “More &gt; Set As Working
-    Directory”
-
-3.  Selecting the `Session` menu at the top of RStudio, then
-    `Select Working Directory > Choose Directory`, and navigate to the
-    appropriate directory
 
 And we’ll load the `tidyverse` library:
 
@@ -37,27 +29,18 @@ And we’ll load the `tidyverse` library:
 library(tidyverse)
 ```
 
-    ## -- Attaching packages --------------------------------------- tidyverse 1.3.0 --
+    ## -- Attaching packages ------------------------------------------------------------------------------------------------------------------------- tidyverse 1.3.0 --
 
     ## v ggplot2 3.3.2     v purrr   0.3.4
     ## v tibble  3.0.3     v dplyr   1.0.2
     ## v tidyr   1.1.2     v stringr 1.4.0
     ## v readr   1.3.1     v forcats 0.5.0
 
-    ## -- Conflicts ------------------------------------------ tidyverse_conflicts() --
+    ## -- Conflicts ---------------------------------------------------------------------------------------------------------------------------- tidyverse_conflicts() --
     ## x dplyr::filter() masks stats::filter()
     ## x dplyr::lag()    masks stats::lag()
 
 ## Importing the data
-
-We’re going to use some water column data from the Damariscotta River.
-The data spans XX years and is at four locations along the river.
-
-\[how much of a description of what the data are do you think we need\]
-
-The data file is located at XXXXX (on Google Drive?). If you haven’t
-already, please download the file and put save it in your working
-directory.
 
 Let’s read the data into a data frame:
 
@@ -68,11 +51,11 @@ fieldData <- read_csv('DamariscottaRiverData.csv')
     ## Parsed with column specification:
     ## cols(
     ##   date = col_double(),
+    ##   station = col_double(),
+    ##   depth_m = col_double(),
     ##   year = col_double(),
     ##   month = col_double(),
     ##   day = col_double(),
-    ##   station = col_double(),
-    ##   depth_m = col_double(),
     ##   temperature_degC = col_double(),
     ##   salinity_psu = col_double(),
     ##   density_kg_m3 = col_double(),
@@ -90,276 +73,140 @@ head(fieldData)
 ```
 
     ## # A tibble: 6 x 14
-    ##     date  year month   day station depth_m temperature_degC salinity_psu
-    ##    <dbl> <dbl> <dbl> <dbl>   <dbl>   <dbl>            <dbl>        <dbl>
-    ## 1 2.02e7  2016     9     8       1   0.917             17.9         32.0
-    ## 2 2.02e7  2016     9     8       1   0.92              17.9         32.0
-    ## 3 2.02e7  2016     9     8       1   0.916             17.9         32.0
-    ## 4 2.02e7  2016     9     8       1   0.916             17.9         32.0
-    ## 5 2.02e7  2016     9     8       1   0.921             17.9         32.0
-    ## 6 2.02e7  2016     9     8       1   0.916             17.9         32.0
+    ##     date station depth_m  year month   day temperature_degC salinity_psu
+    ##    <dbl>   <dbl>   <dbl> <dbl> <dbl> <dbl>            <dbl>        <dbl>
+    ## 1 2.02e7       1       1  2016     9     8             17.8         32.0
+    ## 2 2.02e7       1       2  2016     9     8             17.4         32.0
+    ## 3 2.02e7       1       3  2016     9     8             17.4         32.0
+    ## 4 2.02e7       1       4  2016     9     8             17.4         32.0
+    ## 5 2.02e7       1       5  2016     9     8             17.3         32.0
+    ## 6 2.02e7       1       6  2016     9     8             17.2         32.0
     ## # ... with 6 more variables: density_kg_m3 <dbl>, PAR <dbl>,
     ## #   fluorescence_mg_m3 <dbl>, oxygenConc_umol_kg <dbl>,
     ## #   oxygenSaturation_percent <dbl>, latitude <dbl>
 
-# 2. Scatter plots and linear regressions
+## Challenge A
 
-Yesterday we learned how to make scatter plots to visualize
-relationships between data. But often we need to quantify those
-relationships. We’re going to revisit scatter plots today, but with a
-focus on linear regressions and including regression lines on scatter
-plots.
+1.a. Create a scatter plot of ‘temperature\_degC’ by
+‘fluorescence\_mg\_m3’ and color the points by ‘station’. \[y vs x OR x
+vs y\]
 
-## 2.1 Scatter plots
+1.b. Do the same as 1.a. but convert the station values to factors.
+What’s the difference between the two plots?
 
-Let’s look at how chlorophyll fluorescence is related to temperature.
+2.  Create boxplots looking at the distribution of temperature\_degC by
+    (tip: change the station values to factors).
+
+3.  Plot temperature by depth for samples for the cruise from September
+    8th 2016, coloring the points by station (tip: filter the data frame
+    on the `date` column).
+
+Challenge solutions are in a separate file available on the GitHub
+repository [`plottingOceanDataWithR-challengeSolutions.md`]()LINKLINK
+
+# Some common customizations of `ggplot` figures
+
+## `scale_y_reverse()`
+
+For the last plot in Challenge A, we ended up with a plot that had the
+surface (0 m depth) at the bottom of the y-axis, and the bottom of the
+river at the top of the y-axis. Usually, we’d plot this the other way
+around - we’d flip the y-axis, or plot it in reverse.
+
+``` r
+datasubset <- fieldData %>% filter(date==20160908)
+
+ggplot(data = datasubset, mapping = aes(x = temperature_degC, y = depth_m)) + 
+  geom_point(aes(color=factor(station))) +
+  scale_y_reverse()
+```
+
+![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+\#\# `scale_y_log()`
+
+In Challenge A \#1 we plotted chlorophyll fluorescence against
+temperature. But the majority of the fluorescence data was at the lower
+end of the scale. In this case, it could be more useful to plot the
+fluorescence data on a log scale.
 
 ``` r
 ggplot(data = fieldData, mapping = aes(x = temperature_degC, y = fluorescence_mg_m3)) + 
-  geom_point() +
-  xlab('Temperature (deg C)') +
-  ylab('Fluorescence (mg/m^3)') +
-  xlim(7,18) + ylim(0,12)
+  geom_point(aes(color=factor(station))) +
+  scale_y_log10()
 ```
-
-    ## Warning: Removed 198 rows containing missing values (geom_point).
 
 ![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+\#\# `labs()`
 
-In the above figure, we have a lot of fluorescence data below 2.5 mg
-m<sup> − 3</sup> - in fact, the majority of our data are below that
-value. In this case (and as often happens with geophysical data), it is
-more useful to plot (& perform statistics on) the log-transformed data,
-so we can better understand the relationship between the parameters.
-
-Let’s plot the relationship between temperature and log-transformed
-fluorescence:
+To modify plot legend label or title, use the `labs()` function. The
+`title` argument is used to specify a title for the figure. Depending on
+the type of plot, the legend label argument can vary. In the below, it’s
+the `color` argument of the `geom_point` that is controlling the legend
+entries, so we specify the legend label with the `color` argument.
 
 ``` r
 ggplot(data = fieldData, mapping = aes(x = temperature_degC, y = fluorescence_mg_m3)) + 
-  geom_point() +
-  xlab('Temperature (deg C)') +
-  ylab('Fluorescence (mg/m^3)') +
-  xlim(7,18) +  scale_y_log10(limits=c(0.07,12)) 
+  geom_point(aes(color=factor(station))) +
+  scale_y_log10() +
+  labs(title = 'Relationship between chlorophyll fluorescence and temperature', color='Station')
 ```
-
-    ## Warning: Removed 211 rows containing missing values (geom_point).
 
 ![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
 
-OK great - so we can visualize the relationship between fluorescence and
-temperature. But how do we include a linear regression?
+# Visualizing relationships between multiple variables
 
-## 2.2 Linear regressions
+In our initial exploration of the data, we’ve looked at how to plot some
+variables under some limited conditions e.g. profiles for one cruise, or
+relationships between a couple of variables for all cruises. We could
+have used Excel to do this plotting. But what about if we want to
+visualize our data in a different way that represented the time and
+space components of field data or if we wanted a more complicated subset
+of our data? That’s where R comes in really handy.
 
-To do a linear regression, we need to fit a linear model to our data.
+What we’re going to work towards here is plotting oceanographic data in
+similar way to [Ocean Data View](https://odv.awi.de/). By the end of the
+tutorial, we’ll have created:
 
-**Note: we are not going into the statistics here, or details of whether
-it’s appropriate to do a linear regression on these data - we are just
-showing you *how* you would do a linear regression with your own data if
-you so wished.**
+IMAGE OF FINAL PLOT
 
-Let’s start with looking at fluorescence and temperature. To visualize
-the linear model, we can add in `geom_smooth(model=lm)` to our plot:
+And we’ll have learned how to recreate the above figure under different
+requirements e.g. for a different variable, or different cruise.
 
-``` r
-ggplot(data = fieldData, mapping = aes(x = temperature_degC, y = fluorescence_mg_m3)) + 
-  geom_point() +
-  geom_smooth(method='lm') +
-  xlab('Temperature (deg C)') +
-  ylab('Fluorescence (mg/m^3)') +
-  xlim(7,18) + ylim(0,12)
-```
+But, it’s worth pointing out here that all the methods we’ll be using
+can be used on any type of data - and we’ll see some examples as we go
+through the tutorial.
 
-    ## `geom_smooth()` using formula 'y ~ x'
+## Contour and Bubble Plots
 
-    ## Warning: Removed 198 rows containing non-finite values (stat_smooth).
+Let’s start by considering surface chlorophyll fluorescence at each
+station over the 2016 sampling season. Surface can be defined in
+multiple ways and the exact choices you make will depend on your data
+and your situation. Here, we are going to say surface chlorophyll
+fluorescence is the average value over the top 2 m.
 
-    ## Warning: Removed 198 rows containing missing values (geom_point).
+We are going to create a couple of different figures that show surface
+chlorophyll fluorescence with date along the x-axis and station along
+the y-axis. Before creating the figures, we need to do some data
+manipulation to wrangle our data into a new data frame that contains 3
+columns: date, station and surface chlorophyll fluorescence.
 
-    ## Warning: Removed 11 rows containing missing values (geom_smooth).
+**Another example:** Say you’ve got three cultures that you’re testing
+four different treatments on. For each culture/treatment combination,
+you’re measuring cell counts at a series of time points. What you’d like
+to visualize/plot is the average cell counts over the first two time
+points for each culture and treatment.
 
-![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+How do the variables in these examples compare?
 
-But how do we get the equation and goodness of fit statistics?
-
-``` r
-# fitting a linear model between the two variables
-model1 <- lm(fieldData$fluorescence_mg_m3 ~ fieldData$temperature_degC)
-
-#display results of linear model
-summary(model1)
-```
-
-    ## 
-    ## Call:
-    ## lm(formula = fieldData$fluorescence_mg_m3 ~ fieldData$temperature_degC)
-    ## 
-    ## Residuals:
-    ##     Min      1Q  Median      3Q     Max 
-    ## -2.5066 -0.5602 -0.1425  0.2559  9.2462 
-    ## 
-    ## Coefficients:
-    ##                             Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)                -2.739470   0.032767   -83.6   <2e-16 ***
-    ## fieldData$temperature_degC  0.330775   0.002691   122.9   <2e-16 ***
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-    ## 
-    ## Residual standard error: 0.9568 on 21018 degrees of freedom
-    ## Multiple R-squared:  0.4182, Adjusted R-squared:  0.4181 
-    ## F-statistic: 1.511e+04 on 1 and 21018 DF,  p-value: < 2.2e-16
-
-How do we access these different values and assign them to objects?
-
-``` r
-# assigning the slope and intercept fromt the model to variables
-intercept <- model1$coefficients[1]
-slope <- model1$coefficients[2]
-
-sum_model1 <- summary(model1)
-
-rsquare <- sum_model1$r.squared
-adjrsquare <- sum_model1$adj.r.squared
-std_error <- sum_model1$sigma
-```
-
-Once we have our linear model (i.e. the equation of our line), there are
-other ways to add the line to the figure: `geom_abline` and
-`stat_function`. Let’s look at `stat_function`. To use `stat_function`,
-we need to provide it with a function that describes the equation of our
-model. In this example, we used a linear model to find a straight line,
-so we need to give `stat_function` a function that describes the
-equation of a line (`y = mx + b`):
-
-``` r
-ggplot(data = fieldData, mapping = aes(x = temperature_degC, y = fluorescence_mg_m3)) + 
-  geom_point() +
-  stat_function(fun = function(x) intercept + slope * x, size = 2, color = 'cyan') +
-  xlab('Temperature (deg C)') +
-  ylab('Fluorescence (mg/m^3)') +
-  xlim(7,18) + ylim(0,12)
-```
-
-    ## Warning: Removed 198 rows containing missing values (geom_point).
-
-    ## Warning: Removed 12 row(s) containing missing values (geom_path).
-
-![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
-
-Why is this useful? Why don’t we just always use `geom_smooth`? One of
-the benefits of `stat_function` is that we can use it to plot *any* kind
-of line - it doesn’t need to be a straight line. For example, say we
-wanted to fit a 2nd order polynomial (a quadratic) to our data we could
-do the following:
-
-``` r
-# fitting a linear model between the two variables
-model2 <- lm(fieldData$fluorescence_mg_m3 ~ fieldData$temperature_degC + I(fieldData$temperature_degC^2))
-
-# assigning the coefficients from the models to the variables
-p2 <- model2$coefficients[3]
-p1 <- model2$coefficients[2]
-p0 <- model2$coefficients[1]
-
-ggplot(data = fieldData, mapping = aes(x = temperature_degC, y = fluorescence_mg_m3)) + 
-  geom_point() +
-  stat_function(fun = function(x) intercept + slope * x, size = 2, aes(color='1st order')) +
-  stat_function(fun = function(x) p0 + p1 * x + p2 * (x^2), size = 2, aes(color='2nd order')) +
-  xlab('Temperature (deg C)') +
-  ylab('Fluorescence (mg/m^3)') +
-  xlim(7,18) + ylim(0,12)
-```
-
-    ## Warning: Removed 198 rows containing missing values (geom_point).
-
-    ## Warning: Removed 12 row(s) containing missing values (geom_path).
-
-![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
-
-Or something even more complicated, such as a model between the
-temperature and log-transformed fluorescence:
-
-``` r
-modelLog <- lm(log10(fieldData$fluorescence_mg_m3) ~ fieldData$temperature_degC)
-interceptLog <- modelLog$coefficients[1]
-slopeLog <- modelLog$coefficients[2]
-
-ggplot(data = fieldData, mapping = aes(x = temperature_degC, y = fluorescence_mg_m3)) + 
-  geom_point() +
-  stat_function(fun = function(x) intercept + slope * x, size = 2, aes(color='1st order')) +
-  stat_function(fun = function(x) p0 + p1 * x + p2 * (x^2), size = 2, aes(color='2nd order')) +
-  stat_function(fun = function(x) 10**interceptLog * (10**(slopeLog * x)), size = 2, aes(color = 'power')) +
-  xlab('Temperature (deg C)') +
-  ylab('Fluorescence (mg/m^3)') +
-  xlim(7,18) + ylim(0,12)
-```
-
-    ## Warning: Removed 198 rows containing missing values (geom_point).
-
-    ## Warning: Removed 12 row(s) containing missing values (geom_path).
-
-![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
-
-\[write something in here about applicability of this type of analysis
-on these data\]
-
-# 3. Visualizing 2D patterns on regular grids (need better title)
-
-Here, we are thinking about visualizing one variable based on two other
-variables. For example, how does surface chlorophyll fluorescence change
-at each station over the course of a sampling season? Or OTHER EXAMPLES?
-
-For our data set, let’s consider surface chlorophyll fluorescence at
-each station over the 2016 sampling season. We are going to create a
-couple of different figures that show surface chlorophyll fluorescence
-with date along the x-axis and station along the y-axis. Before creating
-the figures, we need to do some data manipulation to wrangle our data
-into a new data frame that contains 3 columns: date, station and surface
-chlorophyll fluorescence.
+| Field Data | Lab Experiment |
+|:-----------|:---------------|
+| station    | treatment      |
+| date       | culture        |
+| depth      | time point     |
 
 ## 3.1 Data Manipulation
 
 ### Dates
-
-Our data frame contains data from 2016 - 2018, so we first need to
-`filter` the data frame (select rows based on a specific criterion):
-
-``` r
-data2016 <- filter(fieldData, year == 2016)
-
-#check our results
-summary(data2016)
-```
-
-    ##       date               year          month             day       
-    ##  Min.   :20160908   Min.   :2016   Min.   : 9.000   Min.   : 1.00  
-    ##  1st Qu.:20160920   1st Qu.:2016   1st Qu.: 9.000   1st Qu.: 4.00  
-    ##  Median :20161004   Median :2016   Median :10.000   Median : 8.00  
-    ##  Mean   :20160996   Mean   :2016   Mean   : 9.856   Mean   :10.29  
-    ##  3rd Qu.:20161019   3rd Qu.:2016   3rd Qu.:10.000   3rd Qu.:19.00  
-    ##  Max.   :20161101   Max.   :2016   Max.   :11.000   Max.   :20.00  
-    ##     station         depth_m        temperature_degC  salinity_psu  
-    ##  Min.   :1.000   Min.   :  0.867   Min.   : 8.26    Min.   :31.66  
-    ##  1st Qu.:2.000   1st Qu.: 12.516   1st Qu.:11.29    1st Qu.:32.34  
-    ##  Median :3.000   Median : 28.120   Median :12.78    Median :32.67  
-    ##  Mean   :2.938   Mean   : 35.875   Mean   :12.80    Mean   :32.61  
-    ##  3rd Qu.:4.000   3rd Qu.: 52.546   3rd Qu.:14.33    3rd Qu.:32.87  
-    ##  Max.   :4.000   Max.   :105.090   Max.   :17.92    Max.   :33.25  
-    ##  density_kg_m3        PAR            fluorescence_mg_m3 oxygenConc_umol_kg
-    ##  Min.   :22.99   Min.   :   0.0001   Min.   : 0.0672    Min.   : 85.77    
-    ##  1st Qu.:24.06   1st Qu.:   0.0001   1st Qu.: 0.5944    1st Qu.:105.07    
-    ##  Median :24.68   Median :   0.2500   Median : 1.0629    Median :117.34    
-    ##  Mean   :24.56   Mean   :  64.1388   Mean   : 1.5905    Mean   :126.20    
-    ##  3rd Qu.:25.12   3rd Qu.:  16.0250   3rd Qu.: 1.6160    3rd Qu.:140.42    
-    ##  Max.   :25.59   Max.   :2050.0000   Max.   :10.8782    Max.   :262.38    
-    ##  oxygenSaturation_percent    latitude    
-    ##  Min.   : 31.02           Min.   :43.75  
-    ##  1st Qu.: 38.57           1st Qu.:43.75  
-    ##  Median : 44.36           Median :43.81  
-    ##  Mean   : 48.21           Mean   :43.81  
-    ##  3rd Qu.: 53.61           3rd Qu.:43.86  
-    ##  Max.   :105.24           Max.   :43.90
 
 One of the variables we want to plot is date. We currently have date
 stored as a number in the format yyyymmdd, and in separate year, month
@@ -368,10 +215,12 @@ dates would be spaced out incorrectly because R recognises this as a
 number. Let’s look the dates we have samples from:
 
 ``` r
-unique(data2016$date)
+unique(fieldData$date)
 ```
 
-    ## [1] 20160908 20160920 20161004 20161019 20161101
+    ##  [1] 20160908 20160920 20161004 20161019 20161101 20170602 20170912 20170921
+    ##  [9] 20171005 20171109 20171129 20180906 20180919 20180927 20181018 20181030
+    ## [17] 20181115
 
 The second date is September 20th and the third is October 4th - a gap
 of 14 days. But R sees that as a gap of 84 (20161004-20160920), hence
@@ -382,30 +231,86 @@ dates. Let’s use the `ymd` function from yesterday to convert the dates,
 and the `mutate` function to add the reformatted dates to our data
 frame.
 
-### Surface data
+``` r
+library(lubridate)
+```
 
-We have data that spans from the surface to a maximum depth of 105 m,
-but we only want the surface data. These data are measured from a
-profiling instrument - so the depths are slightly different for every
-station and we can’t filter our new `data2016new` data frame based on
-one depth value. There are a few different ways to deal with this, and
-the exact choices you make will depend on your data and your situation.
-Here, we are going to say surface chlorophyll fluorescence is the
-average value over the top 2 m. What that means is for every cruise and
-station, we need to calculate the average chlorophyll fluorescence in
-the top 2 m.
+    ## 
+    ## Attaching package: 'lubridate'
 
-Let’s think about the steps we need to take to manipulate our data into
-that format:
-
-1.  Select the rows where the depth is less than 2 m (use `filter`)
-2.  Separate the data into date and station groups (use `group_by`)
-3.  Take the average for each group of data (use `summarize`)
-
-And we are going to use the pipes to connect this all together.
+    ## The following objects are masked from 'package:base':
+    ## 
+    ##     date, intersect, setdiff, union
 
 ``` r
-chldata2016 <- data2016new %>% filter(depth_m < 2) %>% group_by(station,rdate) %>% summarize(surf_chl = mean(fluorescence_mg_m3))
+fieldDatanew <- mutate(fieldData, rdate = ymd(date))
+```
+
+There’s some more details about [formatting
+dates](https://github.com/cathmmitchell/plottingOceanDataWithR/wiki/Formatting-dates)
+on the GitHub Wiki page.
+
+Our data frame contains data from 2016 - 2018, so we first need to
+`filter` the data frame based on year (select rows based on a specific
+criterion):
+
+``` r
+data2016 <- fieldDatanew %>% filter(year == 2016)
+
+#checking our data frame
+summary(data2016)
+```
+
+    ##       date             station         depth_m            year     
+    ##  Min.   :20160908   Min.   :1.000   Min.   :  1.00   Min.   :2016  
+    ##  1st Qu.:20160920   1st Qu.:2.000   1st Qu.: 13.00   1st Qu.:2016  
+    ##  Median :20161004   Median :3.500   Median : 28.00   Median :2016  
+    ##  Mean   :20160991   Mean   :3.067   Mean   : 35.16   Mean   :2016  
+    ##  3rd Qu.:20161019   3rd Qu.:4.000   3rd Qu.: 51.00   3rd Qu.:2016  
+    ##  Max.   :20161101   Max.   :4.000   Max.   :105.00   Max.   :2016  
+    ##      month             day        temperature_degC  salinity_psu  
+    ##  Min.   : 9.000   Min.   : 1.00   Min.   : 8.281   Min.   :31.69  
+    ##  1st Qu.: 9.000   1st Qu.: 4.00   1st Qu.:11.309   1st Qu.:32.34  
+    ##  Median :10.000   Median : 8.00   Median :12.715   Median :32.67  
+    ##  Mean   : 9.809   Mean   :10.43   Mean   :12.661   Mean   :32.62  
+    ##  3rd Qu.:10.000   3rd Qu.:19.00   3rd Qu.:13.813   3rd Qu.:32.88  
+    ##  Max.   :11.000   Max.   :20.00   Max.   :17.823   Max.   :33.25  
+    ##  density_kg_m3        PAR            fluorescence_mg_m3 oxygenConc_umol_kg
+    ##  Min.   :23.02   Min.   :   0.0001   Min.   : 0.08692   Min.   : 86.03    
+    ##  1st Qu.:24.21   1st Qu.:   0.0001   1st Qu.: 0.60206   1st Qu.:106.90    
+    ##  Median :24.69   Median :   0.4183   Median : 1.05324   Median :118.59    
+    ##  Mean   :24.60   Mean   :  54.4916   Mean   : 1.56151   Mean   :126.07    
+    ##  3rd Qu.:25.12   3rd Qu.:  15.4295   3rd Qu.: 1.55218   3rd Qu.:138.88    
+    ##  Max.   :25.58   Max.   :1498.8235   Max.   :10.47805   Max.   :256.47    
+    ##  oxygenSaturation_percent    latitude         rdate           
+    ##  Min.   : 31.05           Min.   :43.75   Min.   :2016-09-08  
+    ##  1st Qu.: 39.37           1st Qu.:43.75   1st Qu.:2016-09-20  
+    ##  Median : 45.12           Median :43.78   Median :2016-10-04  
+    ##  Mean   : 47.97           Mean   :43.80   Mean   :2016-10-04  
+    ##  3rd Qu.: 53.03           3rd Qu.:43.86   3rd Qu.:2016-10-19  
+    ##  Max.   :103.05           Max.   :43.90   Max.   :2016-11-01
+
+### Selecting and summarizing data
+
+Recall - here, we are going to say surface chlorophyll fluorescence is
+the average value over the top 2 m. What that means is for every cruise
+and station, we need to calculate the average chlorophyll fluorescence
+in the top 2 m.
+
+#### Challenge B
+
+What are the steps we need to take to manipulate our data into a data
+frame with three columns: cruise, station and fluorescence averaged over
+the top 2 m? Describe the step and say the associated `dplyr` data frame
+manipulation functions you would use to do it.
+
+Challenge solutions are in a separate file available on the GitHub
+repository [`plottingOceanDataWithR-challengeSolutions.md`]()LINKLINK
+
+### Back to selecting and summarizing the data
+
+``` r
+chldata2016 <- data2016 %>% filter(depth_m < 2) %>% group_by(station,rdate) %>% summarize(surf_chl = mean(fluorescence_mg_m3))
 ```
 
     ## `summarise()` regrouping output by 'station' (override with `.groups` argument)
@@ -418,21 +323,20 @@ head(chldata2016)
     ## # Groups:   station [2]
     ##   station rdate      surf_chl
     ##     <dbl> <date>        <dbl>
-    ## 1       1 2016-09-08    4.32 
-    ## 2       1 2016-09-20    1.20 
-    ## 3       1 2016-10-04    1.32 
-    ## 4       1 2016-10-19    0.897
-    ## 5       1 2016-11-01    1.06 
-    ## 6       2 2016-09-08    4.07
+    ## 1       1 2016-09-08    4.31 
+    ## 2       1 2016-09-20    1.18 
+    ## 3       1 2016-10-04    1.33 
+    ## 4       1 2016-10-19    0.907
+    ## 5       1 2016-11-01    1.05 
+    ## 6       2 2016-09-08    4.06
 
 We’ve manipulated our data into the form we need to now plot it.
 *However* in the process, we made two extra data frames that we are not
-going to use anymore: `data2016` and `data2016new`. At each step of our
+going to use anymore: `data2016` and `fieldDatanew`. At each step of our
 manipulating, we needed to try and keep track of which data frame to use
 where. With only two it’s maybe OK to keep on top of, but if there are a
 lot more steps, you can sometimes get lost in sea of data frames. Pipes
-can really help keep your environment free of unnecessary
-variables/objects.
+can really help keep your environment free of unnecessary objects.
 
 In our case, we could have actually used pipes to do all the
 manipulations in one command:
@@ -453,38 +357,56 @@ chldata2016 <- fieldData %>% mutate(rdate = ymd(date)) %>% filter(year == 2016, 
 
     ## `summarise()` regrouping output by 'station' (override with `.groups` argument)
 
-## 3.2 Visualizing data using a contour plot
+## Visualizing data using a contour plot
+
+We can visualize this type of data with a contour plot (using
+`geom_contour_filled()`). In this case, our argument to the `labs()`
+function for the legend (color bar) is going to be `fill`.
 
 ``` r
 ggplot(chldata2016,aes(x=rdate,y=station)) +
   geom_contour_filled(aes(z=surf_chl)) +
   geom_point() +
-  labs(fill='surface chlorophyll fluorescence (mg m^-3)') +
-  theme(panel.background = element_rect(fill = "white", colour = "white"))
+  labs(fill='surface chlorophyll fluorescence (mg m^-3)')
 ```
 
-![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
 
-#### Aside \#1: Date Formatting
+We can reformat the x-axis dates if we wished - see details in the
+[Formatting Dates
+wiki](https://github.com/cathmmitchell/plottingOceanDataWithR/wiki/Formatting-dates)
 
-You can format the date in different ways by including a
-`scale_x_date(date_labels='fmt')` argument in your `ggplot` function,
-where `'fmt'` is your required date format. Here’s a handy table showing
-different date formats (from
-[here](https://www.statmethods.net/input/dates.html)):
+Here, the dots (from `geom_point`) show where the measurements were
+made, and the contours filled in the gaps. This helps us to visualize
+the time and space changes in chlorophyll fluorescence.
 
-<img src='datetime_formats.png' width="70%">
-
-So to format your dates as e.g. October-01, you’d use
-`scale_x_date(date_labels='%B-%d')`.
+If we think about our lab experiment example, what our figure would show
+is treatment on the y-axis, culture on the x-axis, and cell counts as
+the contours. In that case - does it make sense to have the cell counts
+fill the gaps between the treatment and culture? No - the treatments and
+cultures are separate from each other. They are not connected in this
+temporal or spatial way. So while the *data manipulation* was the same
+for each data set, the *data visualization* isn’t.
 
 #### Aside \#2: Repositioning x-ticks and x-tick labels
 
 WANT TO INCLUDE THIS??
 
-## 3.3 Visualizing data using a XXXXX??
+## Visualizing data using a bubble plot
 
-# 4. Interpolating and visualizing data
+We are going to plot a scatter plot, where the size of each point
+represents the chlorophyll fluorescence. In this case, our argument to
+the `labs()` function for the legend is going to be `size`.
+
+``` r
+ggplot(chldata2016,aes(x=rdate,y=station)) +
+  geom_point(aes(size=surf_chl)) +
+  labs(size='surface chlorophyll fluorescence (mg m^-3)')
+```
+
+![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+
+# Interpolating and visualizing data
 
 The approach in previous section works well when your data are
 consistent in terms of the variables you want to compare. For the data
@@ -515,149 +437,59 @@ approach as before to create a contour plot:
 ggplot(cruiseData,aes(x=station,y=depth_m)) +
   geom_contour_filled(aes(z=fluorescence_mg_m3)) +
   geom_point() +
-  labs(fill='surface chlorophyll fluorescence (mg m^-3)') +
-  scale_y_reverse() +
-  theme(panel.background = element_rect(fill = "white", colour = "white"))
+  labs(fill='chlorophyll fluorescence (mg m^-3)') +
+  scale_y_reverse() #flip y-axis
 ```
 
-    ## Warning: stat_contour(): Zero contours were generated
+![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
-    ## Warning in min(x): no non-missing arguments to min; returning Inf
-
-    ## Warning in max(x): no non-missing arguments to max; returning -Inf
-
-![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
-
-We end up with no contours! What’s going on here? To draw the contours,
-R needs the y values need to all be at the same intervals (similarly for
-the x values). For our data, the depths at each station are irregular
-and different from each other:
-
-``` r
-ggplot(cruiseData, aes(x=fluorescence_mg_m3, y=depth_m, color = factor(station))) +
-  geom_point() +
-  labs(color='Station') +
-  ylim(5,1) + xlim(3,9)
-```
-
-    ## Warning: Removed 1187 rows containing missing values (geom_point).
-
-![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
-
-\[example of a different type of data you might want to do this on??\]
-
-So we need to sort the depth data onto a regular grid - to do this we
-will need to group the data into depth bins (or depth ranges) and then
-calculate the mean for each depth bin. Let’s bin our data into 1 m
-intervals. Again, we’re making a decision here based on our particular
-data set and situation, this could be different for you.
-
-We are going to use a very similar process to earlier (when we
-considered surface chlorophyll fluorescence on all cruises in 2016).
-
-1.  Round the depths to the nearest meter and include as column in the
-    data frame (use `mutate`)
-2.  Separate the data into depth bin and station groups (use `group_by`)
-3.  Take the average for each group of data (use `summarize`)
-
-``` r
-binned <- cruiseData %>% mutate(depthBin = round(depth_m)) %>% group_by(station,depthBin) %>% summarize(av_fluor = mean(fluorescence_mg_m3))
-```
-
-    ## `summarise()` regrouping output by 'station' (override with `.groups` argument)
-
-``` r
-head(binned)
-```
-
-    ## # A tibble: 6 x 3
-    ## # Groups:   station [1]
-    ##   station depthBin av_fluor
-    ##     <dbl>    <dbl>    <dbl>
-    ## 1       1        1     4.31
-    ## 2       1        2     4.60
-    ## 3       1        3     4.54
-    ## 4       1        4     4.52
-    ## 5       1        5     4.92
-    ## 6       1        6     4.73
-
-We’ve now got a data frame like we had before - let’s try
-`geom_contour_filled` again:
-
-``` r
-ggplot(binned,aes(x=station,y=depthBin)) +
-  geom_contour_filled(aes(z=av_fluor)) +
-  geom_point() +
-  labs(fill='surface chlorophyll fluorescence (mg m^-3)') +
-  scale_y_reverse()
-```
-
-![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
-
-This looks better, but what this plotting function doesn’t do is
+This looks good, but what this plotting function doesn’t do is
 interpolate data between missing data points. We know we have data at
 station 4 below 50 m that isn’t represented in this plot. Can we use a
-different function to show those data too?
+different function to show those data too? Yes - `geom_tile()`.
 
 ``` r
-ggplot(binned,aes(x=station,y=depthBin)) +
-  geom_tile(aes(fill=av_fluor)) +
-  scale_fill_continuous() +
-  labs(fill='surface chlorophyll fluorescence (mg m^-3)') +
+ggplot(cruiseData,aes(x=station,y=depth_m)) +
+  geom_tile(aes(fill=fluorescence_mg_m3)) +
+  labs(fill='chlorophyll fluorescence (mg m^-3)') +
   scale_y_reverse()
 ```
 
-![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
+![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+Let’s go back to the lab experiment example: could it be plotted in this
+way?
 
-All the data are visualized when we plot the data this way. However, in
-this case (and all previous examples!), our x-axis is station number
-i.e. it is a given location. We might want to space out the data on the
-x-axis based on those locations, rather than station number, so we can
-visualize our data with a representative separation between the data
-points. For this data set, the stations are on a similar longitude, so
-looking at latitude will give a good representation of the separation
-between the stations. But this could be distance along cruise track or
-field transect, or XXXX
+Yes - depth could represent time points, and station could represent
+treatment.
 
-THIS NEXT BIT OF CODE IS INCLUDED HERE FOR NOW - MEANING TO INCLUDE
-LATITUDES IN ORIGINAL DF (unless we think it’s worth including a
-complicated if else)
+## Challenge C
 
-``` r
-#binned %>% mutate(latitude = ifelse(binned$station == 1, 43.903,ifelse(binned$station == 2, 43.863,ifelse(binned$station == 3, 43.811,ifelse(binned$station == 4,43.753,NaN)))))
+1.  Create a `geom_tile` plot for temperature\_degC from the cruise that
+    took place on Septh 12th 2017.
 
+2.  Are there any examples from your own data that you could plot in
+    this way?
 
-binned <- cruiseData %>% mutate(depthBin = round(cruiseData$depth_m)) %>% group_by(latitude,depthBin) %>% summarize(av_fluor = mean(fluorescence_mg_m3))
-```
+## Interpolation
 
-    ## `summarise()` regrouping output by 'latitude' (override with `.groups` argument)
-
-``` r
-head(binned)
-```
-
-    ## # A tibble: 6 x 3
-    ## # Groups:   latitude [1]
-    ##   latitude depthBin av_fluor
-    ##      <dbl>    <dbl>    <dbl>
-    ## 1     43.8        1     5.33
-    ## 2     43.8        2     6.11
-    ## 3     43.8        3     7.54
-    ## 4     43.8        4     7.08
-    ## 5     43.8        5     6.61
-    ## 6     43.8        6     6.56
+With our field data one axis has been station number i.e. it is a given
+location. We might want to space out the data on the x-axis based on
+those locations, rather than station number, so we can visualize our
+data with a representative separation between the data points. For this
+data set, the stations are on a similar longitude, so looking at
+latitude will give a good representation of the separation between the
+stations. But this could be distance along cruise track or field
+transect.
 
 ``` r
-ggplot(binned,aes(x=latitude,y=depthBin)) +
-  geom_tile(aes(fill=av_fluor)) +
-  scale_fill_continuous() +
-  labs(fill='surface chlorophyll fluorescence (mg m^-3)') +
+ggplot(cruiseData,aes(x=latitude,y=depth_m)) +
+  geom_tile(aes(fill=fluorescence_mg_m3)) +
+  labs(fill='chlorophyll fluorescence (mg m^-3)') +
   scale_y_reverse() +
-  scale_x_reverse() #flipping the x-axis too, so station 1 is on the left
+  scale_x_reverse() # flipping so station 1 is on the left
 ```
 
-![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
-
+![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
 What we end up with is this plot where we have gaps between each station
 measurement because our sampling stations are not equally spaced in
 terms of latitude. What we can do is estimate what the chlorophyll
@@ -666,10 +498,13 @@ interpolate our data.
 
 We are going to do the bilinear interpolation on our data, which means
 we are going to estimate chlorophyll fluorescence values over regularly
-spaced latitude and depth values. We’re going to use a handy function
-from the `akim` package to do all the hard work for us:
+spaced latitude and depth values. This is something that’s maybe more
+common when working with geospatial data. But in our lab experiment
+case, maybe we’d be interested in interpolating our cell counts between
+our different time points.
 
-\[appropriate place to include the install package?\]
+We’re going to use a handy function from the `akim` package to do all
+the hard work for us:
 
 ``` r
 library(akima)
@@ -679,7 +514,7 @@ library(akima)
 
 ``` r
 #interpolate our data:
-interpReference <- interp(binned$latitude, binned$depthBin, binned$av_fluor)
+interpReference <- interp(cruiseData$latitude, cruiseData$depth_m, cruiseData$fluorescence_mg_m3)
 ```
 
 What does `interpReference` look like? It is a list with 3 items:
@@ -697,24 +532,19 @@ What does `interpReference` look like? It is a list with 3 items:
         the second latitude, and first depth value
 
 What we now need to do is get our data into a data frame format for
-`ggplot`. One way to do this is turn the latitude and depth values into
-a 40 x 40 grid too, and then reshape the data into a data frame.
+`ggplot`. One way to do this is use the `expand.grid` function to create
+a data frame from all combinations of the latitude and depth vectors.
+Then flatten the interpolated data matrix into a vector and add it as a
+column in the data frame.
 
 ``` r
-# making the grids of latitude and depth
-# Note - we need to "transpose" the matrix for the depth data,
-# i.e. we need to flip the rows and columns around
-lat <- matrix(interpReference$x,ncol=40,nrow=40)
-depth <- t(matrix(interpReference$y,ncol=40,nrow=40))
-
-# we need to "flatten" our grids into lists (the as.vector command)
-fluor <- as.vector(interpReference$z)
-lats <- as.vector(lat)
-depths <- as.vector(depth)
-
-# finally, putting the lists together as a dataframe
-CruiseDataInterp <- data.frame(fluorescence = fluor, latitude = lats, depth = depths)
+# making data frame from all combinations of latitude and depth
+CruiseDataInterp <- expand.grid(latitude=interpReference$x,
+                                depth = interpReference$y) %>%
+  mutate(fluorescence = as.vector(interpReference$z))
 ```
+
+Now we have our data frame - can we plot our data as before?
 
 ``` r
 ggplot(CruiseDataInterp, aes(x=latitude, y=depth)) +
@@ -725,7 +555,7 @@ ggplot(CruiseDataInterp, aes(x=latitude, y=depth)) +
   scale_fill_distiller(palette="Greens",direction=1)
 ```
 
-![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-30-1.png)<!-- -->
+![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
 We can include the sample locations and contour lines to make it clear
 where the interpolation is happening:
 
@@ -733,7 +563,7 @@ where the interpolation is happening:
 ggplot(CruiseDataInterp, aes(x=latitude, y=depth)) +
   geom_tile(aes(fill = fluorescence)) +
   geom_contour(aes(z = fluorescence),color="white") +
-  geom_point(data = binned, aes(x=latitude, y=depthBin),color="black") + #adding in the measurement locations
+  geom_point(data = cruiseData, aes(x=latitude, y=depth_m),color="black") + #adding in the measurement locations
   scale_y_reverse() +
   scale_x_reverse() + #so station1 is on the left and station4 is on the right
   labs(y="Depth (m)", fill="fluorescence (mg m^-3)") +
@@ -742,7 +572,7 @@ ggplot(CruiseDataInterp, aes(x=latitude, y=depth)) +
 
     ## Warning: Removed 557 rows containing non-finite values (stat_contour).
 
-![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-31-1.png)<!-- -->
+![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
 
 Note: interpolation below measured depths - in this case (the
 Damariscotta River) those interpolations don’t make sense because the
@@ -878,7 +708,7 @@ interpolationplot(plotData,'avg','fluorescence')
 
     ## Warning: Removed 533 rows containing non-finite values (stat_contour).
 
-![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-36-1.png)<!-- -->
+![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
 
 ## For Loops
 
@@ -958,26 +788,26 @@ for (dd in alldates){
 
     ## `summarise()` regrouping output by 'latitude' (override with `.groups` argument)
 
-![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-40-1.png)<!-- -->
+![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-31-1.png)<!-- -->
 
     ## Warning: Removed 552 rows containing non-finite values (stat_contour).
 
     ## `summarise()` regrouping output by 'latitude' (override with `.groups` argument)
 
-![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-40-2.png)<!-- -->
+![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-31-2.png)<!-- -->
 
     ## Warning: Removed 491 rows containing non-finite values (stat_contour).
 
     ## `summarise()` regrouping output by 'latitude' (override with `.groups` argument)
 
-![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-40-3.png)<!-- -->
+![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-31-3.png)<!-- -->
 
     ## Warning: Removed 522 rows containing non-finite values (stat_contour).
 
     ## `summarise()` regrouping output by 'latitude' (override with `.groups` argument)
 
-![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-40-4.png)<!-- -->
+![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-31-4.png)<!-- -->
 
     ## Warning: Removed 572 rows containing non-finite values (stat_contour).
 
-![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-40-5.png)<!-- -->
+![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-31-5.png)<!-- -->
