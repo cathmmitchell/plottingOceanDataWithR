@@ -23,11 +23,11 @@ Let’s start by setting our working directory by either:
 #setwd('X:/cmitchell/teaching-mentoring/01-BigelowTeaching/carpentriesWorkshops/April2021-RIntro/plottingOceanDataWithR/')
 ```
 
-1.  Navigating to the correct directory in the “Files” window in the
+2.  Navigating to the correct directory in the “Files” window in the
     bottom right of RStudio, then hitting “More &gt; Set As Working
     Directory”
 
-2.  Selecting the `Session` menu at the top of RStudio, then
+3.  Selecting the `Session` menu at the top of RStudio, then
     `Select Working Directory > Choose Directory`, and navigate to the
     appropriate directory
 
@@ -37,14 +37,14 @@ And we’ll load the `tidyverse` library:
 library(tidyverse)
 ```
 
-    ## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.0 ──
+    ## -- Attaching packages --------------------------------------- tidyverse 1.3.0 --
 
-    ## ✓ ggplot2 3.3.3     ✓ purrr   0.3.4
-    ## ✓ tibble  3.1.0     ✓ dplyr   1.0.4
-    ## ✓ tidyr   1.1.2     ✓ stringr 1.4.0
-    ## ✓ readr   1.4.0     ✓ forcats 0.5.0
+    ## v ggplot2 3.3.2     v purrr   0.3.4
+    ## v tibble  3.0.3     v dplyr   1.0.2
+    ## v tidyr   1.1.2     v stringr 1.4.0
+    ## v readr   1.3.1     v forcats 0.5.0
 
-    ## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+    ## -- Conflicts ------------------------------------------ tidyverse_conflicts() --
     ## x dplyr::filter() masks stats::filter()
     ## x dplyr::lag()    masks stats::lag()
 
@@ -65,8 +65,7 @@ Let’s read the data into a data frame:
 fieldData <- read_csv('DamariscottaRiverData.csv')
 ```
 
-    ## 
-    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Parsed with column specification:
     ## cols(
     ##   date = col_double(),
     ##   year = col_double(),
@@ -91,15 +90,15 @@ head(fieldData)
 ```
 
     ## # A tibble: 6 x 14
-    ##       date  year month   day station depth_m temperature_degC salinity_psu
-    ##      <dbl> <dbl> <dbl> <dbl>   <dbl>   <dbl>            <dbl>        <dbl>
-    ## 1 20160908  2016     9     8       1   0.917             17.9         32.0
-    ## 2 20160908  2016     9     8       1   0.92              17.9         32.0
-    ## 3 20160908  2016     9     8       1   0.916             17.9         32.0
-    ## 4 20160908  2016     9     8       1   0.916             17.9         32.0
-    ## 5 20160908  2016     9     8       1   0.921             17.9         32.0
-    ## 6 20160908  2016     9     8       1   0.916             17.9         32.0
-    ## # … with 6 more variables: density_kg_m3 <dbl>, PAR <dbl>,
+    ##     date  year month   day station depth_m temperature_degC salinity_psu
+    ##    <dbl> <dbl> <dbl> <dbl>   <dbl>   <dbl>            <dbl>        <dbl>
+    ## 1 2.02e7  2016     9     8       1   0.917             17.9         32.0
+    ## 2 2.02e7  2016     9     8       1   0.92              17.9         32.0
+    ## 3 2.02e7  2016     9     8       1   0.916             17.9         32.0
+    ## 4 2.02e7  2016     9     8       1   0.916             17.9         32.0
+    ## 5 2.02e7  2016     9     8       1   0.921             17.9         32.0
+    ## 6 2.02e7  2016     9     8       1   0.916             17.9         32.0
+    ## # ... with 6 more variables: density_kg_m3 <dbl>, PAR <dbl>,
     ## #   fluorescence_mg_m3 <dbl>, oxygenConc_umol_kg <dbl>,
     ## #   oxygenSaturation_percent <dbl>, latitude <dbl>
 
@@ -409,7 +408,7 @@ And we are going to use the pipes to connect this all together.
 chldata2016 <- data2016new %>% filter(depth_m < 2) %>% group_by(station,rdate) %>% summarize(surf_chl = mean(fluorescence_mg_m3))
 ```
 
-    ## `summarise()` has grouped output by 'station'. You can override using the `.groups` argument.
+    ## `summarise()` regrouping output by 'station' (override with `.groups` argument)
 
 ``` r
 head(chldata2016)
@@ -442,7 +441,7 @@ manipulations in one command:
 chldata2016 <- fieldData %>% filter(year == 2016) %>% mutate(rdate = ymd(data2016$date)) %>% filter(depth_m < 2) %>% group_by(station,rdate) %>% summarize(surf_chl = mean(fluorescence_mg_m3))
 ```
 
-    ## `summarise()` has grouped output by 'station'. You can override using the `.groups` argument.
+    ## `summarise()` regrouping output by 'station' (override with `.groups` argument)
 
 In fact, the order of the first two commands doesn’t matter, so to
 simplify this long command, we could switch the order of the first two
@@ -452,7 +451,7 @@ commands, then combine the two calls to `filter` into one:
 chldata2016 <- fieldData %>% mutate(rdate = ymd(date)) %>% filter(year == 2016, depth_m < 2) %>% group_by(station,rdate) %>% summarize(surf_chl = mean(fluorescence_mg_m3))
 ```
 
-    ## `summarise()` has grouped output by 'station'. You can override using the `.groups` argument.
+    ## `summarise()` regrouping output by 'station' (override with `.groups` argument)
 
 ## 3.2 Visualizing data using a contour plot
 
@@ -565,7 +564,7 @@ considered surface chlorophyll fluorescence on all cruises in 2016).
 binned <- cruiseData %>% mutate(depthBin = round(depth_m)) %>% group_by(station,depthBin) %>% summarize(av_fluor = mean(fluorescence_mg_m3))
 ```
 
-    ## `summarise()` has grouped output by 'station'. You can override using the `.groups` argument.
+    ## `summarise()` regrouping output by 'station' (override with `.groups` argument)
 
 ``` r
 head(binned)
@@ -631,7 +630,7 @@ complicated if else)
 binned <- cruiseData %>% mutate(depthBin = round(cruiseData$depth_m)) %>% group_by(latitude,depthBin) %>% summarize(av_fluor = mean(fluorescence_mg_m3))
 ```
 
-    ## `summarise()` has grouped output by 'latitude'. You can override using the `.groups` argument.
+    ## `summarise()` regrouping output by 'latitude' (override with `.groups` argument)
 
 ``` r
 head(binned)
@@ -674,7 +673,11 @@ from the `akim` package to do all the hard work for us:
 
 ``` r
 library(akima)
+```
 
+    ## Warning: package 'akima' was built under R version 4.0.3
+
+``` r
 #interpolate our data:
 interpReference <- interp(binned$latitude, binned$depthBin, binned$av_fluor)
 ```
@@ -867,7 +870,7 @@ Now we can try out our functions:
 plotData <- cruiseinterpolation(fieldData, 'fluorescence_mg_m3', 20171109)
 ```
 
-    ## `summarise()` has grouped output by 'latitude'. You can override using the `.groups` argument.
+    ## `summarise()` regrouping output by 'latitude' (override with `.groups` argument)
 
 ``` r
 interpolationplot(plotData,'avg','fluorescence')
@@ -949,29 +952,29 @@ for (dd in alldates){
 }
 ```
 
-    ## `summarise()` has grouped output by 'latitude'. You can override using the `.groups` argument.
+    ## `summarise()` regrouping output by 'latitude' (override with `.groups` argument)
 
     ## Warning: Removed 557 rows containing non-finite values (stat_contour).
 
-    ## `summarise()` has grouped output by 'latitude'. You can override using the `.groups` argument.
+    ## `summarise()` regrouping output by 'latitude' (override with `.groups` argument)
 
 ![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-40-1.png)<!-- -->
 
     ## Warning: Removed 552 rows containing non-finite values (stat_contour).
 
-    ## `summarise()` has grouped output by 'latitude'. You can override using the `.groups` argument.
+    ## `summarise()` regrouping output by 'latitude' (override with `.groups` argument)
 
 ![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-40-2.png)<!-- -->
 
     ## Warning: Removed 491 rows containing non-finite values (stat_contour).
 
-    ## `summarise()` has grouped output by 'latitude'. You can override using the `.groups` argument.
+    ## `summarise()` regrouping output by 'latitude' (override with `.groups` argument)
 
 ![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-40-3.png)<!-- -->
 
     ## Warning: Removed 522 rows containing non-finite values (stat_contour).
 
-    ## `summarise()` has grouped output by 'latitude'. You can override using the `.groups` argument.
+    ## `summarise()` regrouping output by 'latitude' (override with `.groups` argument)
 
 ![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-40-4.png)<!-- -->
 
