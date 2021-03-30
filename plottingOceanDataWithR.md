@@ -45,7 +45,7 @@ library(tidyverse)
 Let’s read the data into a data frame:
 
 ``` r
-fieldData <- read_csv('DamariscottaRiverData.csv')
+fieldData <- read_csv('data/DamariscottaRiverData.csv')
 ```
 
     ## Parsed with column specification:
@@ -87,9 +87,8 @@ head(fieldData)
 
 ## Challenge A
 
-1.a. Create a scatter plot of ‘temperature\_degC’ by
-‘fluorescence\_mg\_m3’ and color the points by ‘station’. \[y vs x OR x
-vs y\]
+1.a. Create a scatter plot of ‘fluorescence\_mg\_m3’ (x-axis) by
+‘temperature\_degC’ (y-axis) and color the points by ‘station’.
 
 1.b. Do the same as 1.a. but convert the station values to factors.
 What’s the difference between the two plots?
@@ -122,7 +121,8 @@ ggplot(data = datasubset, mapping = aes(x = temperature_degC, y = depth_m)) +
 ```
 
 ![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
-\#\# `scale_y_log()`
+
+## `scale_y_log()`
 
 In Challenge A \#1 we plotted chlorophyll fluorescence against
 temperature. But the majority of the fluorescence data was at the lower
@@ -136,7 +136,8 @@ ggplot(data = fieldData, mapping = aes(x = temperature_degC, y = fluorescence_mg
 ```
 
 ![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
-\#\# `labs()`
+
+## `labs()`
 
 To modify plot legend label or title, use the `labs()` function. The
 `title` argument is used to specify a title for the figure. Depending on
@@ -167,7 +168,7 @@ What we’re going to work towards here is plotting oceanographic data in
 similar way to [Ocean Data View](https://odv.awi.de/). By the end of the
 tutorial, we’ll have created:
 
-IMAGE OF FINAL PLOT
+<img src=figures/final_plot.png width=70%>
 
 And we’ll have learned how to recreate the above figure under different
 requirements e.g. for a different variable, or different cruise.
@@ -204,7 +205,7 @@ How do the variables in these examples compare?
 | date       | culture        |
 | depth      | time point     |
 
-## 3.1 Data Manipulation
+## Data Manipulation
 
 ### Dates
 
@@ -297,7 +298,7 @@ the average value over the top 2 m. What that means is for every cruise
 and station, we need to calculate the average chlorophyll fluorescence
 in the top 2 m.
 
-#### Challenge B
+## Challenge B
 
 What are the steps we need to take to manipulate our data into a data
 frame with three columns: cruise, station and fluorescence averaged over
@@ -339,17 +340,8 @@ lot more steps, you can sometimes get lost in sea of data frames. Pipes
 can really help keep your environment free of unnecessary objects.
 
 In our case, we could have actually used pipes to do all the
-manipulations in one command:
-
-``` r
-chldata2016 <- fieldData %>% filter(year == 2016) %>% mutate(rdate = ymd(data2016$date)) %>% filter(depth_m < 2) %>% group_by(station,rdate) %>% summarize(surf_chl = mean(fluorescence_mg_m3))
-```
-
-    ## `summarise()` regrouping output by 'station' (override with `.groups` argument)
-
-In fact, the order of the first two commands doesn’t matter, so to
-simplify this long command, we could switch the order of the first two
-commands, then combine the two calls to `filter` into one:
+manipulations in one command. Note that we can combine the two calls to
+`filter` into one:
 
 ``` r
 chldata2016 <- fieldData %>% mutate(rdate = ymd(date)) %>% filter(year == 2016, depth_m < 2) %>% group_by(station,rdate) %>% summarize(surf_chl = mean(fluorescence_mg_m3))
@@ -370,7 +362,7 @@ ggplot(chldata2016,aes(x=rdate,y=station)) +
   labs(fill='surface chlorophyll fluorescence (mg m^-3)')
 ```
 
-![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
 
 We can reformat the x-axis dates if we wished - see details in the
 [Formatting Dates
@@ -388,10 +380,6 @@ cultures are separate from each other. They are not connected in this
 temporal or spatial way. So while the *data manipulation* was the same
 for each data set, the *data visualization* isn’t.
 
-#### Aside \#2: Repositioning x-ticks and x-tick labels
-
-WANT TO INCLUDE THIS??
-
 ## Visualizing data using a bubble plot
 
 We are going to plot a scatter plot, where the size of each point
@@ -404,7 +392,7 @@ ggplot(chldata2016,aes(x=rdate,y=station)) +
   labs(size='surface chlorophyll fluorescence (mg m^-3)')
 ```
 
-![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
 
 # Interpolating and visualizing data
 
@@ -441,7 +429,7 @@ ggplot(cruiseData,aes(x=station,y=depth_m)) +
   scale_y_reverse() #flip y-axis
 ```
 
-![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
 
 This looks good, but what this plotting function doesn’t do is
 interpolate data between missing data points. We know we have data at
@@ -455,7 +443,7 @@ ggplot(cruiseData,aes(x=station,y=depth_m)) +
   scale_y_reverse()
 ```
 
-![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 Let’s go back to the lab experiment example: could it be plotted in this
 way?
 
@@ -465,7 +453,7 @@ treatment.
 ## Challenge C
 
 1.  Create a `geom_tile` plot for temperature\_degC from the cruise that
-    took place on Septh 12th 2017.
+    took place on Sept 12th 2017.
 
 2.  Are there any examples from your own data that you could plot in
     this way?
@@ -489,7 +477,7 @@ ggplot(cruiseData,aes(x=latitude,y=depth_m)) +
   scale_x_reverse() # flipping so station 1 is on the left
 ```
 
-![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
 What we end up with is this plot where we have gaps between each station
 measurement because our sampling stations are not equally spaced in
 terms of latitude. What we can do is estimate what the chlorophyll
@@ -544,6 +532,9 @@ CruiseDataInterp <- expand.grid(latitude=interpReference$x,
   mutate(fluorescence = as.vector(interpReference$z))
 ```
 
+**Aside for wiki perhaps: point out potential problem of column wise vs
+row wise flattening of the matrix**
+
 Now we have our data frame - can we plot our data as before?
 
 ``` r
@@ -555,7 +546,7 @@ ggplot(CruiseDataInterp, aes(x=latitude, y=depth)) +
   scale_fill_distiller(palette="Greens",direction=1)
 ```
 
-![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
+![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
 We can include the sample locations and contour lines to make it clear
 where the interpolation is happening:
 
@@ -572,21 +563,26 @@ ggplot(CruiseDataInterp, aes(x=latitude, y=depth)) +
 
     ## Warning: Removed 557 rows containing non-finite values (stat_contour).
 
-![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
+![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
 
 Note: interpolation below measured depths - in this case (the
 Damariscotta River) those interpolations don’t make sense because the
 profiles are full water column i.e. depth was limited by bathymetery.
 Point this out and include code to mask those points?
 
-# For loops and functions for creating multiple versions of figures
+## Challenge D
+
+Create a plot like the above that shows temperature interpolated by
+depth and latitude for the cruise that took place on Sept 12th 2017.
+
+# Functions and for loops for creating multiple versions of figures
 
 ## Writing Functions
 
 Functions are blocks of code which when called, perform a specific task.
 Usually you give them an input and they give you an output. We’ve used
-lots of different R functions e.g. `ggplot`, `image.plot`, etc. We can
-write our own functions for our own specific tasks. If you find yourself
+lots of different R functions e.g. `ggplot`, `mutate`, etc. We can write
+our own functions for our own specific tasks. If you find yourself
 copying and pasting blocks of code and changing just a couple small
 parts, that’s often a good time to think about writing a function (or a
 for loop - more later!)
@@ -613,77 +609,63 @@ The last figure we created was for one variable, for one cruise. What if
 we want to look at a different variable? Or a different cruise? It would
 be nice to have a function to regenerate a plot quickly.
 
-We’re actually going to create two functions: one that deals with the
-data manipulation, and one that deals with the plotting.
+We’re going to write a function that creates the above figure. It’s
+going to have two parts: first, we’ll deal with the data manipulation,
+and second, we’ll deal with the plotting.
 
-#### Data manipulation function
+#### Data manipulation revisit
 
 We need to think about what the inputs of our function are going to be -
 these are the variables or objects we want to change e.g. variable or
-cruise date. We also need to think about our output - this will be a
-data frame which we can use to create a plot. As a reminder, here’s the
-steps we took earlier to do the data manipulation:
+cruise date. We also need to think about our output: a plot. As a
+reminder, here’s the steps we took earlier to do the data manipulation:
 
 1.  Filtered the original data frame based on cruise date
-2.  Binned the data into 1 m intervals
-3.  Interpolated the relevant variable
-4.  Reshaped the data back into a data frame
+2.  Interpolated the relevant variable based on depth and latitude
+3.  Reshaped the data back into a data frame
 
-Let’s combine these together into a function. The following code will
-all be a copy from what we did earlier, with a couple of adjustments:
+#### Writing the function
 
-1.  A few of the object names have been generalized e.g. we’ll use
-    `dataframe` rather than `fieldData`, call the column we want to plot
-    `variable` rather than “hard coding” its name “fluorescence\_mg\_m3”
-    and the date `cruiseDate` (as well as renaming a couple of the
-    intermediate objects created along the way)
-2.  We’re going to make use of the `.data` pronoun. The `.data` pronoun
-    refers to data in your data frame. It’s really useful when you want
-    to specify a column name to one of the `dplyr` functions as a
-    character object. See
-    [!this](https://tinyheero.github.io/2020/03/01/use-data-env-pronouns-tidyverse.html)
-    blog post that gives a good overview of `.data` (and `.env`)
-    pronouns. \[better way to do this? expand explanation with simpler
-    example??\]
+The following code will all be a copy from what we did earlier, but a
+few of the object names will be generalized e.g. we’ll use `dataframe`
+rather than `fieldData`, call the column we want to plot `variable`
+rather than “hard coding” its name “fluorescence\_mg\_m3” and the date
+`cruiseDate` (as well as renaming a couple of the intermediate objects
+created along the way).
+
+Good practice for when you write a function is to include a short
+description (as a comment) at the start of the function that describes
+what it does. It can be useful to list details of the input and output
+objects - for yourself, but also for anyone you might share your code
+with.
 
 ``` r
-cruiseinterpolation <- function(dataframe, variable, cruiseDate){
-  # return a data frame with a variable interpolated based on depth and latitude
-  # for a given cruise data
+cruiseInterpolationPlot <- function(dataframe, variable, cruiseDate, colorlabel){
+  # return a heatmap style plot for a variable interpolated over latitude and 
+  # depth
+  # Inputs: dataframe = raw data frame of the DamariscottaRiverData
+  #         variable = data frame column name (as a string) of the variable to
+  #                    interpolate
+  #         cruiseData = numeric value of date in yyyymmdd (to compare with the
+  #                      dataframe$date column)
+  #         colorlabel = label for the color bar (as a string)
   
-  binned <- dataframe %>% filter(date == cruiseDate) %>% mutate(depthBin = round(depth_m)) %>% group_by(latitude,depthBin) %>% summarize(avg = mean(.data[[variable]]))
+  cruiseData <- dataframe %>% filter(date == cruiseDate)
   
   #interpolate our data:
- interpReference <- interp(binned$latitude, binned$depthBin, binned$avg)
+  interpReference <- interp(cruiseData$latitude, cruiseData$depth_m, cruiseData[[variable]])
  
- #reshaping into a data frame
- lat <- matrix(interpReference$x,ncol=40,nrow=40)
- depth <- t(matrix(interpReference$y,ncol=40,nrow=40))
- vardata <- as.vector(interpReference$z)
- lats <- as.vector(lat)
- depths <- as.vector(depth)
-
- #putting the lists together as a data frame
- newdf <- data.frame(avg = vardata, latitude = lats, depth = depths)
- 
- #outputting the new data frame
- return(newdf)
-}
-```
-
-Next, let’s write our plotting function:
-
-``` r
-interpolationplot <- function(dataframe, variable, colorlabel){
-  # returns a heatmap style plot of a variable based on latitude and depth
-  
-  p<- ggplot(dataframe, aes(x=latitude, y=depth)) +
-  geom_tile(aes(fill = .data[[variable]])) +
-  geom_contour(aes(z = .data[[variable]]),color="white") +
-  #geom_point(data = binned, aes(x=latitude, y=depthBin),color="black") + #adding in the measurement locations
+  newdf <- expand.grid(latitude=interpReference$x,
+                                depth_m = interpReference$y) %>%
+  mutate(varname = as.vector(interpReference$z))
+   
+  p<- ggplot(newdf, aes(x=latitude, y=depth_m)) +
+  geom_tile(aes(fill = varname)) +
+  geom_contour(aes(z = varname),color="white") +
+  geom_point(data = cruiseData, aes(x=latitude, y=depth_m),color="black") + #adding in the measurement locations
   scale_y_reverse() +
   scale_x_reverse() + #so station1 is on the left and station4 is on the right
-  labs(y="Depth (m)", fill=colorlabel) +
+  labs(y="Depth (m)", fill=colorlabel, title = as.character(cruiseDate)) +
   scale_fill_distiller(palette="Greens",direction=1)
   
   return(p)
@@ -691,26 +673,30 @@ interpolationplot <- function(dataframe, variable, colorlabel){
 }
 ```
 
-**still need to include the locations of the data, date as title (and
-colorscale limits?)**
-
-Now we can try out our functions:
+Now we can try out our function by trying to make the same plot as
+before:
 
 ``` r
-plotData <- cruiseinterpolation(fieldData, 'fluorescence_mg_m3', 20171109)
+cruiseInterpolationPlot(fieldData,'fluorescence_mg_m3',20160908,'fluorescence')
 ```
 
-    ## `summarise()` regrouping output by 'latitude' (override with `.groups` argument)
+    ## Warning: Removed 557 rows containing non-finite values (stat_contour).
 
-``` r
-interpolationplot(plotData,'avg','fluorescence')
-```
+![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
+\#\# Challenge E
 
-    ## Warning: Removed 533 rows containing non-finite values (stat_contour).
-
-![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
+Create a plot like the above that shows fluorescence interpolated by
+depth and latitude for every cruise in 2016 (one plot per cruise).
 
 ## For Loops
+
+For loops are a way we can repeat a specific task a set number of times.
+For Challenge E, we created plots for every cruise in 2016. To do that,
+we wrote out the call to our `cruiseInterpolationPlot` function a number
+of times, with a different date in each call to the function. We needed
+to know what the exact dates were to enter into our plotting function.
+We could have used a for loop to keep track of all of those parts for
+us.
 
 ### For loop example
 
@@ -749,65 +735,57 @@ mylst <- vector("list",length=4)
 for (ii in 1:4) {
   mylst[[ii]] = ii*10
 }
-print(mylst)
 ```
 
-    ## [[1]]
-    ## [1] 10
-    ## 
-    ## [[2]]
-    ## [1] 20
-    ## 
-    ## [[3]]
-    ## [1] 30
-    ## 
-    ## [[4]]
-    ## [1] 40
-
-We have our functions for manipulating and plotting the data - but what
-if we want to plot the chlorophyll fluorescence for every cruise in
-2016? We could call our functions in a for loop.
+We have our function for plotting the data - let’s try and do Challenge
+E again, but calling our function in a for loop.
 
 Let’s think about what we want to loop over - we’re saying on every
 iteration of our loop, we want to provide a different `cruiseDate` to
-our manipulation function. So we need to first put all our dates into a
-vector, then loop over them.
+our manipulation function. So we need to first put all our dates from
+2016 into a vector, then loop over them.
 
 ``` r
-alldates <- unique(data2016$date) ### REWRITE ONCE I'VE FIGURED OUT WHAT DATA WILL BE IN THE DATA FILE
+data2016 <- fieldData %>% filter(year == 2016)
+alldates <- unique(data2016$date) 
 
 for (dd in alldates){
-  plotData <- cruiseinterpolation(fieldData, 'fluorescence_mg_m3', dd)
-  print(interpolationplot(plotData,'avg','fluorescence'))
+  print(cruiseInterpolationPlot(fieldData,'fluorescence_mg_m3',dd,'fluorescence'))
 }
 ```
 
-    ## `summarise()` regrouping output by 'latitude' (override with `.groups` argument)
-
     ## Warning: Removed 557 rows containing non-finite values (stat_contour).
 
-    ## `summarise()` regrouping output by 'latitude' (override with `.groups` argument)
-
-![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-31-1.png)<!-- -->
+![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
 
     ## Warning: Removed 552 rows containing non-finite values (stat_contour).
 
-    ## `summarise()` regrouping output by 'latitude' (override with `.groups` argument)
-
-![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-31-2.png)<!-- -->
+![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-29-2.png)<!-- -->
 
     ## Warning: Removed 491 rows containing non-finite values (stat_contour).
 
-    ## `summarise()` regrouping output by 'latitude' (override with `.groups` argument)
-
-![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-31-3.png)<!-- -->
+![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-29-3.png)<!-- -->
 
     ## Warning: Removed 522 rows containing non-finite values (stat_contour).
 
-    ## `summarise()` regrouping output by 'latitude' (override with `.groups` argument)
-
-![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-31-4.png)<!-- -->
+![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-29-4.png)<!-- -->
 
     ## Warning: Removed 572 rows containing non-finite values (stat_contour).
 
-![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-31-5.png)<!-- -->
+![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-29-5.png)<!-- -->
+
+A potential problem with the above is each plot has been made with
+different axis and color bar limits. This makes it hard to directly
+compare the data for each cruise. One way around that is to include x, y
+and color bar limits as input arguments to the function.
+
+**Note: depending on your situation, you could “hard-code” the limits
+into the function itself if you know you’re never going to want to
+change them.**
+
+## Challenge F
+
+Adapt the `cruiseInterpolationPlot` function such that the x, y and
+color bar limits are determined from input arguments. (Hint: use the
+`xlim` and `ylim` functions with `ggplot` and include the `limits`
+argument in the `scale_fill_distiller` function.)
