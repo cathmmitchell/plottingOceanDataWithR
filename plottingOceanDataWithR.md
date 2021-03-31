@@ -4,13 +4,13 @@ Plotting Ocean Data With R
 # Damariscotta River cruise data
 
 For this tutorial we’re going to use some water column data from the
-Damariscotta River. The data spans XX years and is at four locations
+Damariscotta River. The data spans 3 years and is at four locations
 along the river.
 
-The data file is called `DamariscottaRiverData.csv` and is [in the
-GitHub
+The data file is called `DamariscottaRiverData.csv` and is [in the data
+folder in the GitHub
 repository](https://github.com/cathmmitchell/plottingOceanDataWithR). If
-you haven’t already, please download the file and put save it in your
+you haven’t already, please download the file and save it in your
 working directory. You can download the file by:
 
 1.  Click on the file name
@@ -23,7 +23,7 @@ working directory. You can download the file by:
 
 ## Initialize session
 
-And we’ll load the `tidyverse` library:
+First, we’ll load the `tidyverse` library:
 
 ``` r
 library(tidyverse)
@@ -101,7 +101,8 @@ What’s the difference between the two plots?
     on the `date` column).
 
 Challenge solutions are in a separate file available on the GitHub
-repository [`plottingOceanDataWithR-challengeSolutions.md`]()LINKLINK
+repository
+[`plottingOceanDataWithR-challengeSolutions.md`](https://github.com/cathmmitchell/plottingOceanDataWithR/blob/main/challengeSolutions.md)
 
 # Some common customizations of `ggplot` figures
 
@@ -293,10 +294,12 @@ summary(data2016)
 
 ### Selecting and summarizing data
 
-Recall - here, we are going to say surface chlorophyll fluorescence is
-the average value over the top 2 m. What that means is for every cruise
-and station, we need to calculate the average chlorophyll fluorescence
-in the top 2 m.
+Learning how to code isn’t just about learning commands and syntax -
+it’s also about learning how to break down your analysis into steps that
+the computer can handle. Recall - here, we are going to say surface
+chlorophyll fluorescence is the average value over the top 2 m. What
+that means is for every cruise and station, we need to calculate the
+average chlorophyll fluorescence in the top 2 m.
 
 ## Challenge B
 
@@ -304,9 +307,6 @@ What are the steps we need to take to manipulate our data into a data
 frame with three columns: cruise, station and fluorescence averaged over
 the top 2 m? Describe the step and say the associated `dplyr` data frame
 manipulation functions you would use to do it.
-
-Challenge solutions are in a separate file available on the GitHub
-repository [`plottingOceanDataWithR-challengeSolutions.md`]()LINKLINK
 
 ### Back to selecting and summarizing the data
 
@@ -444,6 +444,7 @@ ggplot(cruiseData,aes(x=station,y=depth_m)) +
 ```
 
 ![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+
 Let’s go back to the lab experiment example: could it be plotted in this
 way?
 
@@ -466,8 +467,9 @@ those locations, rather than station number, so we can visualize our
 data with a representative separation between the data points. For this
 data set, the stations are on a similar longitude, so looking at
 latitude will give a good representation of the separation between the
-stations. But this could be distance along cruise track or field
-transect.
+stations. For cruise or sampling tracks where both latitude and
+longitude are variable, this could be distance along the cruise path or
+field transect.
 
 ``` r
 ggplot(cruiseData,aes(x=latitude,y=depth_m)) +
@@ -491,7 +493,7 @@ common when working with geospatial data. But in our lab experiment
 case, maybe we’d be interested in interpolating our cell counts between
 our different time points.
 
-We’re going to use a handy function from the `akim` package to do all
+We’re going to use a handy function from the `akima` package to do all
 the hard work for us:
 
 ``` r
@@ -532,8 +534,11 @@ CruiseDataInterp <- expand.grid(latitude=interpReference$x,
   mutate(fluorescence = as.vector(interpReference$z))
 ```
 
-**Aside for wiki perhaps: point out potential problem of column wise vs
-row wise flattening of the matrix**
+**Note: Something to be aware of with the above step is if the matrix is
+flattened row-wise or column-wise. To make sure the flattened matrix
+elements align with the correct latitude and depth pair, you might need
+to transpose your matrix first (flip it along the diagonal)
+`t(interpReference$z)`**
 
 Now we have our data frame - can we plot our data as before?
 
@@ -547,6 +552,7 @@ ggplot(CruiseDataInterp, aes(x=latitude, y=depth)) +
 ```
 
 ![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
+
 We can include the sample locations and contour lines to make it clear
 where the interpolation is happening:
 
@@ -565,10 +571,10 @@ ggplot(CruiseDataInterp, aes(x=latitude, y=depth)) +
 
 ![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
 
-Note: interpolation below measured depths - in this case (the
-Damariscotta River) those interpolations don’t make sense because the
-profiles are full water column i.e. depth was limited by bathymetery.
-Point this out and include code to mask those points?
+**Note: In this case (the Damariscotta River) we interpolated below the
+measured depths. But those interpolations don’t make sense here because
+the profiles are full water column i.e. depth was limited by
+bathymetery.**
 
 ## Challenge D
 
@@ -615,10 +621,8 @@ and second, we’ll deal with the plotting.
 
 #### Data manipulation revisit
 
-We need to think about what the inputs of our function are going to be -
-these are the variables or objects we want to change e.g. variable or
-cruise date. We also need to think about our output: a plot. As a
-reminder, here’s the steps we took earlier to do the data manipulation:
+As a reminder, here’s the steps we took earlier to do the data
+manipulation:
 
 1.  Filtered the original data frame based on cruise date
 2.  Interpolated the relevant variable based on depth and latitude
@@ -632,6 +636,10 @@ rather than `fieldData`, call the column we want to plot `variable`
 rather than “hard coding” its name “fluorescence\_mg\_m3” and the date
 `cruiseDate` (as well as renaming a couple of the intermediate objects
 created along the way).
+
+We need to think about what the inputs of our function are going to be -
+these are the variables or objects we want to change e.g. variable or
+cruise date. We also need to think about our output: a plot.
 
 Good practice for when you write a function is to include a short
 description (as a comment) at the start of the function that describes
@@ -659,14 +667,14 @@ cruiseInterpolationPlot <- function(dataframe, variable, cruiseDate, colorlabel)
                                 depth_m = interpReference$y) %>%
   mutate(varname = as.vector(interpReference$z))
    
-  p<- ggplot(newdf, aes(x=latitude, y=depth_m)) +
-  geom_tile(aes(fill = varname)) +
-  geom_contour(aes(z = varname),color="white") +
-  geom_point(data = cruiseData, aes(x=latitude, y=depth_m),color="black") + #adding in the measurement locations
-  scale_y_reverse() +
-  scale_x_reverse() + #so station1 is on the left and station4 is on the right
-  labs(y="Depth (m)", fill=colorlabel, title = as.character(cruiseDate)) +
-  scale_fill_distiller(palette="Greens",direction=1)
+  p <- ggplot(newdf, aes(x=latitude, y=depth_m)) +
+    geom_tile(aes(fill = varname)) +
+    geom_contour(aes(z = varname),color="white") +
+    geom_point(data = cruiseData, aes(x=latitude, y=depth_m),color="black") + #adding in the measurement locations
+    scale_y_reverse() +
+    scale_x_reverse() + #so station1 is on the left and station4 is on the right
+    labs(y="Depth (m)", fill=colorlabel, title = cruiseDate) +
+    scale_fill_distiller(palette="Greens",direction=1)
   
   return(p)
   
@@ -683,10 +691,13 @@ cruiseInterpolationPlot(fieldData,'fluorescence_mg_m3',20160908,'fluorescence')
     ## Warning: Removed 557 rows containing non-finite values (stat_contour).
 
 ![](plottingOceanDataWithR_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
-\#\# Challenge E
+
+## Challenge E
 
 Create a plot like the above that shows fluorescence interpolated by
-depth and latitude for every cruise in 2016 (one plot per cruise).
+depth and latitude for every cruise in 2016 (one plot per cruise). To
+get a list of all the dates of cruises in 2016 do
+`unique(data2016$date)` and look at the object printed to the console.
 
 ## For Loops
 
@@ -786,6 +797,7 @@ change them.**
 ## Challenge F
 
 Adapt the `cruiseInterpolationPlot` function such that the x, y and
-color bar limits are determined from input arguments. (Hint: use the
-`xlim` and `ylim` functions with `ggplot` and include the `limits`
-argument in the `scale_fill_distiller` function.)
+color bar limits are determined from input arguments and re-plot all the
+fluorescence data for each cruise in 2016. (Hint: use the `xlim` and
+`ylim` functions with `ggplot` and include the `limits` argument in the
+`scale_fill_distiller` function.)
