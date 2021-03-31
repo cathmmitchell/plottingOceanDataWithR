@@ -32,11 +32,11 @@ The following information is not required for doing the workshop, but here for t
 There is a Wiki that accompanies this GitHub repository (click the Wiki link on the second from top toolbar). 
 The Wiki contains a couple of pages with more details, plus additional plotting and analysis examples. 
 
-## Challenge Solutions
+### Challenge Solutions
 
 The tutorial contains some challenges, you can find the solutions to these in `challengeSolutions.md`.
 
-## R notebooks
+### R notebooks
 
 The `.Rmd` files are the R notebooks that were used to write the tutorial and challenge solutions. The tutorial
 and challenge solution markdown files (`.md`) and the associated folders (which contain all the images for each
