@@ -7,19 +7,12 @@ For this tutorial we’re going to use some water column data from the
 Damariscotta River. The data spans 3 years and is at four locations
 along the river.
 
-The data file is called `DamariscottaRiverData.csv` and is [in the data
-folder in the GitHub
-repository](https://github.com/cathmmitchell/plottingOceanDataWithR). If
-you haven’t already, please download the file and save it in your
-working directory. You can download the file by:
-
-1.  Click on the file name
-2.  Either select `View raw` (center of screen) or the `Download` button
-    (to the right) - a new tab in your browser should open that shows
-    the contents of the file
-3.  Right click anywhere on the window with the file contents
-4.  Select `Save page as`
-5.  Save the file into your working directory.
+There is a [GitHub
+repository](https://github.com/cathmmitchell/plottingOceanDataWithR) for
+this tutorial that also contains the R script we are going to work in,
+the data file we are going to use, and has some additional information.
+Please go there for more information and instructions on how to download
+the data file and the R script.
 
 ## Initialize session
 
@@ -29,14 +22,14 @@ First, we’ll load the `tidyverse` library:
 library(tidyverse)
 ```
 
-    ## -- Attaching packages ------------------------------------------------------------------------------------------------------------------------- tidyverse 1.3.0 --
+    ## -- Attaching packages ------------------- tidyverse 1.3.0 --
 
     ## v ggplot2 3.3.2     v purrr   0.3.4
     ## v tibble  3.0.3     v dplyr   1.0.2
     ## v tidyr   1.1.2     v stringr 1.4.0
     ## v readr   1.3.1     v forcats 0.5.0
 
-    ## -- Conflicts ---------------------------------------------------------------------------------------------------------------------------- tidyverse_conflicts() --
+    ## -- Conflicts ---------------------- tidyverse_conflicts() --
     ## x dplyr::filter() masks stats::filter()
     ## x dplyr::lag()    masks stats::lag()
 
@@ -366,7 +359,11 @@ ggplot(chldata2016,aes(x=rdate,y=station)) +
 
 We can reformat the x-axis dates if we wished - see details in the
 [Formatting Dates
-wiki](https://github.com/cathmmitchell/plottingOceanDataWithR/wiki/Formatting-dates)
+wiki](https://github.com/cathmmitchell/plottingOceanDataWithR/wiki/Formatting-dates).
+
+We can also change the locations of the x-ticks. How we do this depends
+on our data type - see some examples in the [x-tick
+wiki](https://github.com/cathmmitchell/plottingOceanDataWithR/wiki/x-ticks-and-x-tick-labels).
 
 Here, the dots (from `geom_point`) show where the measurements were
 made, and the contours filled in the gaps. This helps us to visualize
